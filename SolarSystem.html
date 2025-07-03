@@ -212,19 +212,25 @@
 
         // Placeholder image URLs for planet surface maps using placehold.co
         const planetTextures = {
-            "Mercury": "https://www.solarsystemscope.com/textures/download/2k_mercury.jpg", // Brownish
-            "Venus": "https://www.solarsystemscope.com/textures/download/2k_venus_surface.jpg", // Yellowish
+            "Mercury": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_mercury.jpg", // Brownish
+            "Venus": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_venus_surface.jpg", // Yellowish
             "Earth": "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/earth_atmos_2048.jpg", // Realistic Earth texture
             "EarthLights": "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/earth_lights_2048.png", // Earth night lights
             "Moon": "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/moon_1024.jpg", // Moon texture
-            "Mars": "https://www.solarsystemscope.com/textures/download/2k_mars.jpg", // Reddish
-            "Jupiter": "https://davidschimke.com/wp-content/uploads/2025/07/2k_jupiter.jpg", // Tan/Brown stripes
-            "Saturn": "https://www.solarsystemscope.com/textures/download/2k_saturn.jpg", // Golden brown
-            "Uranus": "https://www.solarsystemscope.com/textures/download/2k_uranus.jpg", // Light blue
-            "Neptune": "https://www.solarsystemscope.com/textures/download/2k_neptune.jpg", // Dark blue
-            "Pluto": "https://placehold.co/256x256/CD853F/FFFFFF?text=Pluto" // Brown/red
+            "Mars": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_mars.jpg", // Reddish
+            "Jupiter": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_jupiter.jpg", // Tan/Brown stripes
+            "Saturn": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_saturn.jpg", // Golden brown
+            "Uranus": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_uranus.jpg", // Light blue
+            "Neptune": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_neptune.jpg", // Dark blue
+            "Pluto": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_pluto.jpg" // Brown/red
         };
 
+        const planetRingsTextures = {
+            "Saturn": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_saturn_ring_alpha.png", // Saturn's rings
+            "Neptune": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/neptune_rings.png" // Neptune's faint rings
+        };
+
+        const sunTexture = "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_sun.jpg"; // Placeholder for Sun texture
 
         /**
          * Displays a custom message box instead of alert().
@@ -300,7 +306,13 @@
 
             // Add a star (Sun)
             const starGeometry = new THREE.SphereGeometry(5, 32, 32); // Sphere for the star
-            const starMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFF00 }); // Yellow color
+            const starMaterial = new THREE.MeshBasicMaterial({
+                map: textureLoader.load(sunTexture, undefined, undefined, function(err) {
+                    console.error('An error occurred loading the star texture:', err);
+                    // Removed showMessageBox call here
+                }),
+                emissive: 0xFFFF00 // Emissive color for glowing effect
+            });
             star = new THREE.Mesh(starGeometry, starMaterial);
             scene.add(star);
             currentCameraTarget = star; // Set initial camera target to the star
