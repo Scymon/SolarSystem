@@ -8,9 +8,9 @@
     <style>
         body {
             margin: 0;
-            overflow: hidden; /* Hide scrollbars */
+            overflow: hidden;
             font-family: 'Inter', sans-serif;
-            background-color: #000; /* Black background for space */
+            background-color: #000;
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -20,13 +20,12 @@
         }
         canvas {
             display: block;
-            background-color: #000; /* Ensure canvas background is black */
-            border-radius: 10px; /* Rounded corners for the canvas */
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); /* Subtle glow */
-            width: 100vw; /* Changed to 100vw */
-            height: 100vh; /* Changed to 100vh */
+            background-color: #000;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            width: 100vw;
+            height: 100vh;
         }
-        /* Removed .info-box style block */
         .message-box {
             position: fixed;
             top: 50%;
@@ -38,7 +37,7 @@
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
             text-align: center;
             z-index: 1000;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .message-box button {
             background-color: #4CAF50;
@@ -71,49 +70,100 @@
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
             z-index: 10;
             transition: background-color 0.3s ease;
-            display: none; /* Hidden by default, shown when focused on planet */
+            display: none;
         }
         .focus-release-button:hover {
             background-color: rgba(255, 255, 255, 0.4);
         }
-        .control-button { /* Unified style for bottom-left buttons */
+        .control-button {
             position: absolute;
             bottom: 10px;
-            width: 40px; /* Make it square for icon */
-            height: 40px; /* Make it square for icon */
+            width: 40px;
+            height: 40px;
             background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 50%; /* Make it circular */
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
             z-index: 10;
-            transition: background-color 0.3s ease;
-            font-size: 20px; /* Adjust font size for emoji */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-size: 20px;
         }
         .control-button:hover {
             background-color: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
         }
-        /* Position for specific buttons */
+        .control-button[title]:hover:after {
+            content: attr(title);
+            position: absolute;
+            bottom: 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 100;
+        }
         #toggleFieldLinesButton {
             left: 10px;
         }
         #toggleSpaceshipButton {
             left: 60px;
         }
-        /* Dynamic positioning for planet buttons using CSS variable */
+        #toggleGravityFieldButton {
+            left: 110px;
+        }
+        #togglePauseButton {
+            left: 160px;
+        }
         .planet-button {
-            left: calc(110px + (var(--button-index) * 50px)); /* Start after magnet and spaceship buttons */
-            background-size: cover; /* Make the rendered planet fill the button */
+            left: calc(210px + (var(--button-index) * 50px));
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            font-size: 0; /* Hide any text content if present, as it's an image */
+            font-size: 0;
+        }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            z-index: 10;
+            font-size: 14px;
+        }
+        .help-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            display: none;
+            color: #fff;
+            font-size: 16px;
+            max-width: 400px;
+        }
+        .help-overlay h2 {
+            margin-top: 0;
+        }
+        .help-overlay ul {
+            list-style: none;
+            padding: 0;
+        }
+        .help-overlay li {
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <!-- Removed .info-box div -->
     <div id="messageBox" class="message-box">
         <p id="messageText"></p>
         <button onclick="hideMessageBox()">OK</button>
@@ -121,856 +171,521 @@
     <div id="focusReleaseButton" class="focus-release-button">
         &times;
     </div>
-    <div id="toggleFieldLinesButton" class="control-button">
+    <div id="toggleFieldLinesButton" class="control-button" title="Toggle Magnetic Field Lines">
         🧲
     </div>
-    <div id="toggleSpaceshipButton" class="control-button">
+    <div id="toggleSpaceshipButton" class="control-button" title="Toggle Spaceship Mode">
         🚀
     </div>
-    <!-- New buttons for planets -->
-    <div id="planetButton0" class="control-button planet-button"></div> <!-- Mercury -->
-    <div id="planetButton1" class="control-button planet-button"></div> <!-- Venus -->
-    <div id="planetButton2" class="control-button planet-button"></div> <!-- Earth -->
-    <div id="planetButton3" class="control-button planet-button"></div> <!-- Mars -->
-    <div id="planetButton4" class="control-button planet-button"></div> <!-- Jupiter -->
-    <div id="planetButton5" class="control-button planet-button"></div> <!-- Saturn -->
-    <div id="planetButton6" class="control-button planet-button"></div> <!-- Uranus -->
-    <div id="planetButton7" class="control-button planet-button"></div> <!-- Neptune -->
-    <div id="planetButton8" class="control-button planet-button"></div> <!-- Pluto -->
-    <div id="planetButtonSystem" class="control-button planet-button"></div> <!-- Full System (0 key) -->
+    <div id="toggleGravityFieldButton" class="control-button" title="Toggle Gravity Field">
+        💫
+    </div>
+    <div id="togglePauseButton" class="control-button" title="Pause/Resume Simulation">
+        ⏯️
+    </div>
+    <div id="planetButton0" class="control-button planet-button"></div>
+    <div id="planetButton1" class="control-button planet-button"></div>
+    <div id="planetButton2" class="control-button planet-button"></div>
+    <div id="planetButton3" class="control-button planet-button"></div>
+    <div id="planetButton4" class="control-button planet-button"></div>
+    <div id="planetButton5" class="control-button planet-button"></div>
+    <div id="planetButton6" class="control-button planet-button"></div>
+    <div id="planetButton7" class="control-button planet-button"></div>
+    <div id="planetButton8" class="control-button planet-button"></div>
+    <div id="planetButtonSystem" class="control-button planet-button"></div>
+    <div id="infoPanel" class="info-panel"></div>
+    <div id="helpOverlay" class="help-overlay">
+        <h2>Controls</h2>
+        <ul>
+            <li><b>0</b>: Focus on Sun</li>
+            <li><b>1-9</b>: Focus on planets</li>
+            <li><b>Mouse Drag</b>: Orbit camera (orbit mode)</li>
+            <li><b>Mouse Wheel</b>: Zoom in/out</li>
+            <li><b>WASD</b>: Move spaceship (spaceship mode)</li>
+            <li><b>H</b>: Toggle this help</li>
+        </ul>
+        <button onclick="toggleHelpOverlay()">Close</button>
+    </div>
 
     <script>
-        // Global variables for Three.js scene elements
+        // --- Configuration Constants ---
+        const Config = {
+            CAMERA: {
+                FOV: 75,
+                NEAR: 0.1,
+                FAR: 2000,
+                ORBIT_RADIUS_DEFAULT: 70,
+                ORBIT_RADIUS_MIN: 5,
+                ORBIT_RADIUS_MAX: 400,
+                ORBIT_ROTATION_SPEED: 0.005,
+                ORBIT_ZOOM_SPEED: 0.1,
+                PLANET_ZOOM_MULTIPLIER: 8,
+                ANIMATION_LERP_FACTOR: 0.05,
+                ANIMATION_THRESHOLD_RADIUS: 0.1,
+                ANIMATION_THRESHOLD_ANGLE: 0.001
+            },
+            STAR: {
+                RADIUS: 5,
+                COLOR: 0xFFFF00,
+                LIGHT_INTENSITY: 2.0,
+                LIGHT_DISTANCE: 100,
+                ROTATION_SPEED: 0.001,
+                FIELD_LINES: {
+                    NUM_LINES: 50,
+                    EXTENT_EQUATORIAL: 20,
+                    COLOR: 0xFFD700
+                },
+                VISUAL_MASS: 1000
+            },
+            PLANETS: [
+                { name: "Mercury", radius: 0.5, color: 0x8A8A8A, orbit: 10, orbitSpeed: 0.02, texture: "https://placehold.co/256x256/8A8A8A/FFFFFF?text=Mercury", fieldLines: { numLines: 5, extent: 2, color: 0x808080 }, visualMass: 10 },
+                { name: "Venus", radius: 0.9, color: 0xFFD700, orbit: 18, orbitSpeed: 0.015, texture: "https://placehold.co/256x256/FFD700/000000?text=Venus", fieldLines: { numLines: 5, extent: 2, color: 0xFF8C00 }, visualMass: 50 },
+                { name: "Earth", radius: 1.0, color: 0x0000FF, orbit: 25, orbitSpeed: 0.01, texture: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/earth_atmos_2048.jpg", lightsTexture: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/earth_lights_2048.png", moons: [{ radius: 0.2, color: 0xCCCCCC, orbit: 2.5, orbitSpeed: 0.05 }], fieldLines: { numLines: 30, extent: 8, color: 0x00FF00 }, visualMass: 60 },
+                { name: "Mars", radius: 0.7, color: 0xFF4500, orbit: 32, orbitSpeed: 0.009, texture: "https://placehold.co/256x256/FF4500/FFFFFF?text=Mars", moons: [{ radius: 0.1, color: 0x663300, orbit: 1.0, orbitSpeed: 0.08 }, { radius: 0.08, color: 0x663300, orbit: 1.5, orbitSpeed: 0.06 }], fieldLines: { numLines: 5, extent: 3, color: 0xFF4500 }, visualMass: 20 },
+                { name: "Jupiter", radius: 3.5, color: 0xF4A460, orbit: 45, orbitSpeed: 0.006, texture: "https://placehold.co/256x256/F4A460/000000?text=Jupiter", moons: [{ radius: 0.5, color: 0xFFD700, orbit: 5.0, orbitSpeed: 0.04 }, { radius: 0.4, color: 0xADD8E6, orbit: 6.5, orbitSpeed: 0.035 }, { radius: 0.6, color: 0x8B4513, orbit: 8.0, orbitSpeed: 0.03 }, { radius: 0.55, color: 0x696969, orbit: 9.5, orbitSpeed: 0.025 }], fieldLines: { numLines: 40, extent: 15, color: 0xFFFFFF }, visualMass: 800 },
+                { name: "Saturn", radius: 3.0, color: 0xDAA520, orbit: 60, orbitSpeed: 0.004, texture: "https://placehold.co/256x256/DAA520/000000?text=Saturn", rings: { innerRadius: 4.0, outerRadius: 7.0, color: 0x8B4513, opacity: 0.7 }, fieldLines: { numLines: 35, extent: 12, color: 0xFFFFFF }, visualMass: 600 },
+                { name: "Uranus", radius: 2.0, color: 0xAFEEEE, orbit: 75, orbitSpeed: 0.0025, texture: "https://placehold.co/256x256/AFEEEE/000000?text=Uranus", fieldLines: { numLines: 25, extent: 10, color: 0xADD8E6 }, visualMass: 200 },
+                { name: "Neptune", radius: 2.0, color: 0x4169E1, orbit: 90, orbitSpeed: 0.002, texture: "https://placehold.co/256x256/4169E1/FFFFFF?text=Neptune", rings: { innerRadius: 2.5, outerRadius: 3.5, color: 0xADD8E6, opacity: 0.9 }, fieldLines: { numLines: 25, extent: 10, color: 0x4169E1 }, visualMass: 220 },
+                { name: "Pluto", radius: 0.3, color: 0xCD853F, orbit: 105, orbitSpeed: 0.001, texture: "https://placehold.co/256x256/CD853F/FFFFFF?text=Pluto", fieldLines: { numLines: 2, extent: 1.5, color: 0xCD853F }, visualMass: 5 }
+            ],
+            ASTEROID_BELT: {
+                INNER_RADIUS: 35,
+                OUTER_RADIUS: 42,
+                NUM_ASTEROIDS: 500,
+                ASTEROID_RADIUS: 0.1,
+                COLOR: 0x8B4513,
+                ORBIT_SPEED_MIN: 0.001,
+                ORBIT_SPEED_MAX: 0.002,
+                ROTATION_SPEED_MIN: 0.005,
+                ROTATION_SPEED_MAX: 0.02
+            },
+            STARS: {
+                COUNT: 1000,
+                RADIUS: 0.2,
+                COLOR: 0xFFFFFF,
+                MAX_DISTANCE: 1500,
+                NEBULA_AVOID_RADIUS: 700
+            },
+            NEBULA: {
+                SPHEROID_COUNT: 30000,
+                OUTER_RADIUS: 700,
+                INNER_RADIUS: 200,
+                CLUSTER_INFLUENCE: 0.3,
+                COLOR_PALETTE: [
+                    0xFF00FF,
+                    0x8000FF,
+                    0xCC00CC,
+                    0x660099
+                ],
+                SPHEROID_SIZE_MIN: 2,
+                SPHEROID_SIZE_MAX: 10,
+                OPACITY_MIN: 0.0001,
+                OPACITY_MAX: 0.0051,
+                ROTATION_SPEED_Y: 0.0005,
+                ROTATION_SPEED_X: 0.0002
+            },
+            SPACESHIP: {
+                SPEED: 0.5,
+                ROTATION_SPEED: 0.005,
+                CAMERA_OFFSET: new THREE.Vector3(0, 5, -20)
+            },
+            GRAVITY_FIELD: {
+                GRID_SIZE: 600,
+                GRID_SPACING: 1,
+                STATIC_GRID_RENDER_INTERVAL: 13,
+                STATIC_PARTICLE_SIZE: 0.1,
+                STATIC_PARTICLE_OPACITY: 0.2,
+                STATIC_PARTICLE_COLOR: 0x00FFFF,
+                FALLING_PARTICLE_COUNT: 50000,
+                FALLING_PARTICLE_SIZE: 0.4,
+                FALLING_PARTICLE_OPACITY: 0.8,
+                FALLING_PARTICLE_COLOR_START: 0x00FFFF,
+                FALLING_PARTICLE_COLOR_END: 0xFF0000,
+                FALLING_PARTICLE_MIN_LIFETIME: 300,
+                FALLING_PARTICLE_MAX_LIFETIME: 600,
+                GRAVITY_STRENGTH: 0.005,
+                VELOCITY_DECAY: 0.99,
+                RESET_THRESHOLD_RADIUS_MULTIPLIER: 1.5,
+                MAX_PARTICLE_DISPLACEMENT: 200,
+                COLOR_CHANGE_DISTANCE_FACTOR: 50,
+                FADE_DURATION: 500
+            },
+            UI: {
+                BUTTON_ICON_SIZE: 40,
+                PLANET_BUTTON_START_INDEX: 4
+            }
+        };
+
+        // Global variables
         let scene, camera, renderer;
         let star;
-        const planets = []; // Array to hold planet objects
-        const moons = []; // Array to hold moon objects
-        const asteroids = []; // Array to hold asteroid objects
-        let nebulaGroup; // To hold the nebula group of spheres
-        const planetFieldLines = []; // Array to hold magnetic field line groups
-
-        // Camera control variables for orbit mode
-        let orbitRadius = 70; // Current distance of the camera from the currentCameraTarget
-        let orbitTheta = 0; // Current horizontal angle (azimuth)
-        let orbitPhi = Math.PI / 2; // Current vertical angle (polar, 0 at top, PI at bottom)
-        const minOrbitRadius = 5; // Minimum zoom distance
-        const maxOrbitRadius = 400; // Maximum zoom distance
-        const orbitRotationSpeed = 0.005; // Sensitivity for mouse drag rotation
-        const orbitZoomSpeed = 0.1; // Sensitivity for mouse wheel zoom
-
-        // Ground level camera variables
-        let groundLevelCamera = false; // Flag to indicate if ground level camera is active 
-        const groundLevelCameraOffset = new THREE.Vector3(0, 5, 10); // Offset for ground level camera
-        const groundLevelCameraHeight = 1.5; // Height of the camera above the ground level
-        const groundLevelCameraDistance = 10; // Distance from the ground level camera to the target object
-        const groundLevelCameraMinHeight = 0.5; // Minimum height above ground level
-        const groundLevelCameraMaxHeight = 5; // Maximum height above ground level
-        const groundLevelCameraMinDistance = 5; // Minimum distance from the target object
-        const groundLevelCameraMaxDistance = 20; // Maximum distance from the target object
-        const groundLevelCameraRotationSpeed = 0.005; // Speed of rotation for ground level camera
-        const groundLevelCameraZoomSpeed = 0.1; // Speed of zoom for ground level camera
-        const groundLevelCameraMinZoom = 0.1; // Minimum zoom level for ground level camera
-
-        // Spaceship mode variables
-        let cameraMode = 'orbit'; // 'orbit' or 'spaceship'
+        const planets = [];
+        const moons = [];
+        const asteroids = [];
+        let nebulaGroup;
+        const planetFieldLines = [];
+        let staticGridParticles;
+        let fallingGravityParticles;
+        let gravityFieldVisible = false;
+        let gravityFadeOpacity = 0;
+        const staticGridPositions = [];
+        const fallingParticlesData = [];
+        let orbitRadius = Config.CAMERA.ORBIT_RADIUS_DEFAULT;
+        let orbitTheta = 0;
+        let orbitPhi = Math.PI / 2;
+        let currentCameraTarget;
+        let isAnimatingCamera = false;
+        let targetOrbitRadius, targetOrbitTheta, targetOrbitPhi;
+        let cameraMode = 'orbit';
         let spaceship;
-        let spaceshipSpeed = 0.5; // Base movement speed
-        let spaceshipRotationSpeed = 0.005; // Base rotation speed
-        const keyboardState = {
-            w: false, s: false, a: false, d: false,
-            q: false, e: false // For roll or up/down, if needed
-        };
-        let isSteering = false; // Flag for mouse steering
+        const keyboardState = { w: false, s: false, a: false, d: false };
+        let isSteering = false;
         let mouseLookX = 0;
         let mouseLookY = 0;
-        const spaceshipCameraOffset = new THREE.Vector3(0, 5, -20); // Offset from spaceship for third-person view
-
-        // Common control variables
         let isDragging = false;
         let previousMouseX = 0;
         let previousMouseY = 0;
-        let currentCameraTarget; // The object the camera is currently orbiting around (star or a planet mesh)
-        let isAnimatingCamera = false; // Flag to indicate if camera is smoothly transitioning
-
-        let targetCameraPosition = new THREE.Vector3(); // Target position for camera animation
-
-        // Raycasting variables for object picking and hover
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        let hoveredPlanet = null; // Stores the currently hovered planet mesh
-
-        // Temporary vector for getting world position
+        let hoveredPlanet = null;
+        let isPaused = false;
         const tempVector = new THREE.Vector3();
-
-        // Get UI elements
+        const tempForce = new THREE.Vector3();
+        const tempColor = new THREE.Color();
+        const colorStart = new THREE.Color(Config.GRAVITY_FIELD.FALLING_PARTICLE_COLOR_START);
+        const colorEnd = new THREE.Color(Config.GRAVITY_FIELD.FALLING_PARTICLE_COLOR_END);
         const focusReleaseButton = document.getElementById('focusReleaseButton');
         const toggleFieldLinesButton = document.getElementById('toggleFieldLinesButton');
         const toggleSpaceshipButton = document.getElementById('toggleSpaceshipButton');
-
-        // Texture loader (still used for Earth and EarthLights)
+        const toggleGravityFieldButton = document.getElementById('toggleGravityFieldButton');
+        const togglePauseButton = document.getElementById('togglePauseButton');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+        const infoPanel = document.getElementById('infoPanel');
+        const helpOverlay = document.getElementById('helpOverlay');
         const textureLoader = new THREE.TextureLoader();
+        let touchStartX = 0;
+        let touchStartY = 0;
 
-        // Placeholder image URLs for planet surface maps using placehold.co
-        const planetTextures = {
-            "Mercury": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_mercury.jpg", // Brownish
-            "Venus": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_venus_surface.jpg", // Yellowish
-            "Earth": "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/earth_atmos_2048.jpg", // Realistic Earth texture
-            "EarthLights": "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/earth_lights_2048.png", // Earth night lights
-            "Moon": "https://cdn.jsdelivr.net/gh/mrdoob/three.js@dev/examples/textures/planets/moon_1024.jpg", // Moon texture
-            "Mars": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_mars.jpg", // Reddish
-            "Jupiter": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_jupiter.jpg", // Tan/Brown stripes
-            "Saturn": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_saturn.jpg", // Golden brown
-            "Uranus": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_uranus.jpg", // Light blue
-            "Neptune": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_neptune.jpg", // Dark blue
-            "Pluto": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_pluto.jpg" // Brown/red
-        };
-
-        const planetRingsTextures = {
-            "Saturn": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_saturn_ring_alpha.png", // Saturn's rings
-            "Neptune": "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/neptune_rings.png" // Neptune's faint rings
-        };
-
-        const sunTexture = "https://cdn.jsdelivr.net/gh/Scymon/SolarSystem@main/planets/2k_sun.jpg"; // Placeholder for Sun texture
-
-        /**
-         * Displays a custom message box instead of alert().
-         * @param {string} message - The message to display.
-         */
         function showMessageBox(message) {
-            const messageBox = document.getElementById('messageBox');
-            const messageText = document.getElementById('messageText');
             messageText.textContent = message;
             messageBox.style.display = 'block';
         }
 
-        /**
-         * Hides the custom message box.
-         */
         function hideMessageBox() {
-            document.getElementById('messageBox').style.display = 'none';
+            messageBox.style.display = 'none';
         }
 
-        /**
-         * Converts Cartesian coordinates (x, y, z) relative to an origin to spherical coordinates (radius, theta, phi).
-         * @param {number} x - X coordinate.
-         * @param {number} y - Y coordinate.
-         * @param {number} z - Z coordinate.
-         * @returns {object} An object containing radius, theta, and phi.
-         */
+        function toggleHelpOverlay() {
+            helpOverlay.style.display = helpOverlay.style.display === 'block' ? 'none' : 'block';
+        }
+
         function cartesianToSpherical(x, y, z) {
             const radius = Math.sqrt(x * x + y * y + z * z);
-            const theta = Math.atan2(x, z); // Azimuthal angle (around Y axis)
-            const phi = Math.acos(y / radius); // Polar angle (from positive Y axis)
+            const theta = Math.atan2(x, z);
+            const phi = Math.acos(y / radius);
             return { radius, theta, phi };
         }
 
-        /**
-         * Converts spherical coordinates (radius, theta, phi) to Cartesian coordinates (x, y, z).
-         * @param {number} radius - The radius.
-         * @param {number} theta - The azimuthal angle (longitude).
-         * @param {number} phi - The polar angle (colatitude).
-         * @returns {THREE.Vector3} The Cartesian coordinates.
-         */
-        function sphericalToCartesian(radius, theta, phi) {
-            const x = radius * Math.sin(phi) * Math.cos(theta);
-            const y = radius * Math.cos(phi);
-            const z = radius * Math.sin(phi) * Math.sin(theta);
-            return new THREE.Vector3(x, y, z);
-        }
-
-        /**
-         * Handles window resize events to adjust camera aspect ratio and renderer size.
-         */
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        /**
-         * Initializes the Three.js scene, camera, and renderer.
-         */
-        function init() {
-            // Create a new scene
+        function setupScene() {
             scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(Config.CAMERA.FOV, window.innerWidth / window.innerHeight, Config.CAMERA.NEAR, Config.CAMERA.FAR);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            window.addEventListener('resize', onWindowResize, false);
+        }
 
-            // Set up the camera (PerspectiveCamera for 3D view)
-            // Parameters: FOV, Aspect Ratio, Near Clipping Plane, Far Clipping Plane
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // Camera position will be set dynamically in animate() based on orbit controls
-
-            // Set up the WebGL renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true }); // antialias for smoother edges
-            renderer.setSize(window.innerWidth, window.innerHeight); // Set renderer size to full window
-            document.body.appendChild(renderer.domElement); // Add the renderer's canvas to the DOM
-
-            // Add a star (Sun)
-            const starGeometry = new THREE.SphereGeometry(5, 32, 32); // Sphere for the star
-            const starMaterial = new THREE.MeshBasicMaterial({
-                map: textureLoader.load(sunTexture, undefined, undefined, function(err) {
-                    console.error('An error occurred loading the star texture:', err);
-                    // Removed showMessageBox call here
-                }),
-                emissive: 0xFFFF00 // Emissive color for glowing effect
-            });
+        function createSun() {
+            const starGeometry = new THREE.SphereGeometry(Config.STAR.RADIUS, 32, 32);
+            const starMaterial = new THREE.MeshBasicMaterial({ color: Config.STAR.COLOR });
             star = new THREE.Mesh(starGeometry, starMaterial);
             scene.add(star);
-            currentCameraTarget = star; // Set initial camera target to the star
-            updateFocusReleaseButtonVisibility(); // Hide button initially
-
-            // Add a point light to simulate the sun's light
-            const pointLight = new THREE.PointLight(0xFFFFFF, 2.0, 100); // White light, increased intensity to 2.0, distance 100
-            star.add(pointLight); // Attach light to the star so it moves with it
-
-            // Add an ambient light to provide general illumination
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft white light, intensity 0.5
+            currentCameraTarget = star;
+            const pointLight = new THREE.PointLight(0xFFFFFF, Config.STAR.LIGHT_INTENSITY, Config.STAR.LIGHT_DISTANCE);
+            star.add(pointLight);
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
             scene.add(ambientLight);
+        }
 
-            // Create all 9 planets with their respective textures
-            // Mercury
-            createPlanet(0.5, 0x8A8A8A, 10, 0.02, "Mercury", planetTextures["Mercury"]);
-            // Venus
-            createPlanet(0.9, 0xFFD700, 18, 0.015, "Venus", planetTextures["Venus"]);
-            // Earth
-            const earth = createPlanet(1.0, 0x0000FF, 25, 0.01, "Earth", planetTextures["Earth"]);
-            addEarthLights(earth.mesh, 1.0, planetTextures["EarthLights"]); // Add Earth lights layer
-            createMoon(earth.mesh, 0.2, 0xCCCCCC, 2.5, 0.05); // Earth's Moon
-            // Mars
-            const mars = createPlanet(0.7, 0xFF4500, 32, 0.009, "Mars", planetTextures["Mars"]);
-            createMoon(mars.mesh, 0.1, 0x663300, 1.0, 0.08); // Phobos
-            createMoon(mars.mesh, 0.08, 0x663300, 1.5, 0.06); // Deimos
-            // Jupiter
-            const jupiter = createPlanet(3.5, 0xF4A460, 45, 0.006, "Jupiter", planetTextures["Jupiter"]);
-            // Jupiter's Moons
-            createMoon(jupiter.mesh, 0.5, 0xFFD700, 5.0, 0.04); // Io (yellow/orange)
-            createMoon(jupiter.mesh, 0.4, 0xADD8E6, 6.5, 0.035); // Europa (light blue/white)
-            createMoon(jupiter.mesh, 0.6, 0x8B4513, 8.0, 0.03); // Ganymede (brown/gray)
-            createMoon(jupiter.mesh, 0.55, 0x696969, 9.5, 0.025); // Callisto (dark gray)
-            // Saturn
-            const saturn = createPlanet(3.0, 0xDAA520, 60, 0.004, "Saturn", planetTextures["Saturn"]);
-            createRing(saturn.mesh, 4.0, 7.0, 0x8B4513); // Saturn's Rings
-            // Uranus
-            createPlanet(2.0, 0xAFEEEE, 75, 0.0025, "Uranus", planetTextures["Uranus"]);
-            // Neptune
-            const neptune = createPlanet(2.0, 0x4169E1, 90, 0.002, "Neptune", planetTextures["Neptune"]);
-            createRing(neptune.mesh, 2.5, 3.5, 0xADD8E6, 0.9); // Neptune's Rings (faint)
-            // Pluto
-            createPlanet(0.3, 0xCD853F, 105, 0.001, "Pluto", planetTextures["Pluto"]);
-
-            // Add the asteroid belt
-            createAsteroidBelt(35, 42, 500); // Between Mars (32) and Jupiter (45) with 500 asteroids
-
-            // Add background stars
-            createStars();
-
-            // Add the organic nebula cloud
-            createOrganicNebula();
-
-            // Create magnetic field lines for the Sun and each planet
-            // Sun's magnetic field (simplified dipole)
-            createMagneticFieldLines(star, star.geometry.parameters.radius, 50, 20, 0xFFD700); // Yellow/Gold for Sun, large extent
-            // Mercury (very weak/induced field, for visualization, a tiny field)
-            createMagneticFieldLines(planets[0].mesh, planets[0].mesh.geometry.parameters.radius, 5, 2, 0x808080);
-            // Venus (no intrinsic field, for visualization, a tiny field)
-            createMagneticFieldLines(planets[1].mesh, planets[1].mesh.geometry.parameters.radius, 5, 2, 0xFF8C00);
-            // Earth
-            createMagneticFieldLines(planets[2].mesh, planets[2].mesh.geometry.parameters.radius, 30, 8, 0x00FF00);
-            // Mars (very weak field, for visualization, a tiny field)
-            createMagneticFieldLines(planets[3].mesh, planets[3].mesh.geometry.parameters.radius, 5, 3, 0xFF4500);
-            // Jupiter (strongest field)
-            createMagneticFieldLines(planets[4].mesh, planets[4].mesh.geometry.parameters.radius, 40, 15, 0xFFFFFF);
-            // Saturn
-            createMagneticFieldLines(planets[5].mesh, planets[5].mesh.geometry.parameters.radius, 35, 12, 0xFFFFFF);
-            // Uranus
-            createMagneticFieldLines(planets[6].mesh, planets[6].mesh.geometry.parameters.radius, 25, 10, 0xADD8E6);
-            // Neptune
-            createMagneticFieldLines(planets[7].mesh, planets[7].mesh.geometry.parameters.radius, 25, 10, 0x4169E1);
-            // Pluto (no significant field)
-            createMagneticFieldLines(planets[8].mesh, planets[8].mesh.geometry.parameters.radius, 2, 1.5, 0xCD853F);
-
-            // Create the spaceship model
-            createSpaceship();
-
-            // Add event listeners for mouse interaction
-            document.addEventListener('mousedown', onDocumentMouseDown, false);
-            document.addEventListener('mouseup', onDocumentMouseUp, false);
-            document.addEventListener('mousemove', onDocumentMouseMove, false); // Modified for hover & steering
-            document.addEventListener('wheel', onDocumentMouseWheel, false); // For zoom
-            document.addEventListener('click', onDocumentClick, false); // For focusing on planets
-            document.addEventListener('keydown', onDocumentKeyDown, false); // For keyboard shortcuts
-            document.addEventListener('keyup', onDocumentKeyUp, false); // For keyboard shortcuts
-            focusReleaseButton.addEventListener('click', onFocusReleaseButtonClick, false); // For unfocusing with button
-            toggleFieldLinesButton.addEventListener('click', toggleMagneticFieldLines, false); // Toggle field lines
-            toggleSpaceshipButton.addEventListener('click', toggleSpaceshipMode, false); // Toggle spaceship mode
-            window.addEventListener('resize', onWindowResize, false); // Handle window resizing
-
-            // Create planet buttons and their icons
-            const planetButtonIds = [
-                "planetButton0", "planetButton1", "planetButton2", "planetButton3",
-                "planetButton4", "planetButton5", "planetButton6", "planetButton7",
-                "planetButton8"
+        function createPlanet(planetConfig) {
+            const lod = new THREE.LOD();
+            const levels = [
+                { distance: 50, geometry: new THREE.SphereGeometry(planetConfig.radius, 32, 32) },
+                { distance: 100, geometry: new THREE.SphereGeometry(planetConfig.radius, 16, 16) },
+                { distance: 200, geometry: new THREE.SphereGeometry(planetConfig.radius, 8, 8) }
             ];
-
-            // Use a promise to ensure planets are created before trying to render their icons
-            // This prevents issues if createPlanet is asynchronous (e.g., texture loading)
-            // For placehold.co, it's synchronous, but good practice for future texture changes.
-            Promise.all(planets.map(planetData => new Promise(resolve => {
-                // Check if the planet mesh has a map texture, if so, wait for it to load
-                if (planetData.mesh.material.map && !planetData.mesh.material.map.image) {
-                    planetData.mesh.material.map.onUpdate = () => resolve();
-                } else {
-                    resolve();
-                }
-            }))).then(() => {
-                planets.forEach((planetData, index) => {
-                    const button = document.getElementById(planetButtonIds[index]);
-                    if (button) {
-                        button.style.setProperty('--button-index', index + 2); // Start after magnet and spaceship buttons
-                        createPlanetButtonIcon(planetData, button);
-                        button.addEventListener('click', () => focusCameraOn(planetData.mesh));
-                    }
-                });
-
-                // For the "0" key equivalent (full system view)
-                const systemButton = document.getElementById('planetButtonSystem');
-                if (systemButton) {
-                    systemButton.style.setProperty('--button-index', planets.length + 2); // Position after all planet buttons
-                    // Create a simple icon for the solar system button (e.g., a small sun)
-                    const sunIconScene = new THREE.Scene();
-                    const sunIconCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
-                    sunIconCamera.position.z = 10;
-                    const sunIconMesh = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xFFFF00 }));
-                    sunIconScene.add(sunIconMesh);
-                    const sunIconRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                    sunIconRenderer.setSize(40, 40); // Small size for icon
-                    sunIconRenderer.setClearColor(0x000000, 0); // Transparent background
-                    sunIconRenderer.render(sunIconScene, sunIconCamera);
-                    systemButton.style.backgroundImage = `url(${sunIconRenderer.domElement.toDataURL()})`;
-                    systemButton.addEventListener('click', () => focusCameraOn(star));
-                    // Clean up mini-renderer
-                    sunIconRenderer.dispose();
-                    sunIconScene.traverse(object => {
-                        if (object.geometry) object.geometry.dispose();
-                        if (object.material) object.material.dispose();
-                    });
-                    sunIconScene.clear();
-                }
-            });
-
-            // Set initial camera position
-            updateCameraPosition();
-        }
-
-        /**
-         * Renders a small 3D representation of a planet onto a button's background.
-         * @param {object} planetData - The planet data object (mesh, name, etc.).
-         * @param {HTMLElement} buttonElement - The button element to set the background image for.
-         */
-        function createPlanetButtonIcon(planetData, buttonElement) {
-            const iconSize = 40; // Size of the icon in pixels
-            const iconScene = new THREE.Scene();
-            const iconCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
-            // Position camera to frame the planet correctly based on its radius
-            iconCamera.position.z = planetData.mesh.geometry.parameters.radius * 2.5; // Adjusted multiplier for better framing
-            iconCamera.lookAt(0, 0, 0);
-
-            // Add a light to the icon scene for Phong materials to be visible
-            const iconLight = new THREE.PointLight(0xFFFFFF, 1.0);
-            iconLight.position.set(5, 5, 5);
-            iconScene.add(iconLight);
-            iconScene.add(new THREE.AmbientLight(0x404040, 0.5)); // Add ambient light for overall visibility
-
-            // Clone the planet mesh and add it to the icon scene
-            const clonedPlanet = planetData.mesh.clone();
-            // Ensure cloned planet is at origin for icon rendering
-            clonedPlanet.position.set(0, 0, 0);
-
-            // Apply specific rotations for Saturn and Neptune icons to show rings
-            if (planetData.name === "Saturn" || planetData.name === "Neptune") {
-                clonedPlanet.rotation.x = Math.PI / 6; // Tilt for rings visibility
-            }
-
-            iconScene.add(clonedPlanet);
-
-            // If Earth, clone its lights layer too
-            if (planetData.name === "Earth" && planetData.mesh.children.length > 0) {
-                const earthLightsMesh = planetData.mesh.children.find(child => child.material && child.material.blending === THREE.AdditiveBlending);
-                if (earthLightsMesh) {
-                    const clonedLights = earthLightsMesh.clone();
-                    clonedLights.position.set(0, 0, 0);
-                    iconScene.add(clonedLights);
-                }
-            }
-
-            // If Saturn, clone its rings
-            if (planetData.name === "Saturn" && planetData.mesh.children.length > 0) {
-                const saturnRingsMesh = planetData.mesh.children.find(child => child.geometry && child.geometry.type === 'RingGeometry');
-                if (saturnRingsMesh) {
-                    const clonedRings = saturnRingsMesh.clone();
-                    clonedRings.position.set(0, 0, 0);
-                    clonedRings.rotation.x = Math.PI / 2; // Rings are always flat
-                    iconScene.add(clonedRings);
-                }
-            }
-            // If Neptune, clone its rings (newly added)
-            if (planetData.name === "Neptune" && planetData.mesh.children.length > 0) {
-                const neptuneRingsMesh = planetData.mesh.children.find(child => child.geometry && child.geometry.type === 'RingGeometry');
-                if (neptuneRingsMesh) {
-                    const clonedRings = neptuneRingsMesh.clone();
-                    clonedRings.position.set(0, 0, 0);
-                    clonedRings.rotation.x = Math.PI / 2; // Rings are always flat
-                    iconScene.add(clonedRings);
-                }
-            }
-
-
-            const iconRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            iconRenderer.setSize(iconSize, iconSize);
-            iconRenderer.setClearColor(0x000000, 0); // Transparent background
-
-            // Render the icon scene
-            iconRenderer.render(iconScene, iconCamera);
-
-            // Set the button's background image
-            buttonElement.style.backgroundImage = `url(${iconRenderer.domElement.toDataURL()})`;
-
-            // Clean up resources
-            iconRenderer.dispose();
-            iconScene.traverse(object => {
-                if (object.geometry) object.geometry.dispose();
-                if (object.material) object.material.dispose();
-            });
-            iconScene.clear();
-            iconCamera.clear();
-        }
-
-        /**
-         * Creates a planet and adds it to the scene.
-         * @param {number} radius - Radius of the planet.
-         * @param {number} color - Hexadecimal color of the planet (base color).
-         * @param {number} orbitRadius - Distance from the star.
-         * @param {number} orbitSpeed - Speed of orbit around the star.
-         * @param {string} name - Name of the planet.
-         * @param {string|null} textureUrl - URL for the planet's surface texture, or null for procedural.
-         * @returns {object} The planet object (mesh and data).
-         */
-        function createPlanet(radius, color, orbitRadius, orbitSpeed, name, textureUrl) {
-            const planetGeometry = new THREE.SphereGeometry(radius, 32, 32);
             let planetMaterial;
-
-            // Load texture if URL is provided
-            if (textureUrl) {
-                planetMaterial = new THREE.MeshPhongMaterial({ color: color, emissive: 0x000000, specular: 0x111111, shininess: 30 });
-                textureLoader.load(textureUrl,
-                    // On load
-                    function (texture) {
-                        planetMaterial.map = texture;
-                        planetMaterial.needsUpdate = true;
-                    },
-                    // On progress
+            if (planetConfig.texture) {
+                planetMaterial = new THREE.MeshPhongMaterial({ color: planetConfig.color, emissive: 0x000000, specular: 0x111111, shininess: 30 });
+                textureLoader.load(planetConfig.texture,
+                    (texture) => { planetMaterial.map = texture; planetMaterial.needsUpdate = true; },
                     undefined,
-                    // On error
-                    function (err) {
-                        console.error('An error occurred loading texture for ' + name + ':', err);
-                        // Removed showMessageBox call here
+                    () => {
+                        console.warn(`Failed to load texture for ${planetConfig.name}, using fallback color`);
+                        planetMaterial.map = null;
                     }
                 );
             } else {
-                // Fallback to basic material if no texture URL
-                planetMaterial = new THREE.MeshPhongMaterial({ color: color, emissive: 0x000000, specular: 0x111111, shininess: 30 });
+                planetMaterial = new THREE.MeshPhongMaterial({ color: planetConfig.color, emissive: 0x000000, specular: 0x111111, shininess: 30 });
             }
-
-            const planet = new THREE.Mesh(planetGeometry, planetMaterial);
-            planet.name = name; // Assign a name to the mesh for identification
-            planet.userData.originalEmissiveColor = planetMaterial.emissive.getHex(); // Store original emissive color
-
-            // Create an Object3D to act as the orbit pivot
+            levels.forEach(level => {
+                const mesh = new THREE.Mesh(level.geometry, planetMaterial);
+                lod.addLevel(mesh, level.distance);
+            });
+            lod.name = planetConfig.name;
+            lod.userData.originalEmissiveColor = planetMaterial.emissive.getHex();
             const orbitPivot = new THREE.Object3D();
-            star.add(orbitPivot); // Add the pivot to the star's group so it1 orbits the star
-
-            planet.position.x = orbitRadius; // Set initial position of the planet
-            orbitPivot.add(planet); // Add the planet to its orbit pivot
-
+            star.add(orbitPivot);
+            lod.position.x = planetConfig.orbit;
+            orbitPivot.add(lod);
             const planetData = {
-                mesh: planet, // Store the THREE.Mesh object itself
+                mesh: lod,
                 orbitPivot: orbitPivot,
-                orbitSpeed: orbitSpeed,
-                orbitRadius: orbitRadius,
-                rotationSpeed: Math.random() * 0.02 + 0.005, // Random rotation speed for planet itself
-                name: name
+                orbitSpeed: planetConfig.orbitSpeed,
+                rotationSpeed: Math.random() * 0.02 + 0.005,
+                name: planetConfig.name,
+                visualMass: planetConfig.visualMass
             };
             planets.push(planetData);
-            return planetData; // Return the planet data for moon/ring creation
+            return planetData;
         }
 
-        /**
-         * Adds a transparent layer of city lights to Earth.
-         * @param {THREE.Mesh} earthMesh - The mesh of the Earth planet.
-         * @param {number} earthRadius - The radius of the Earth planet.
-         * @param {string} lightsTextureUrl - URL for the Earth's night lights texture.
-         */
         function addEarthLights(earthMesh, earthRadius, lightsTextureUrl) {
-            const lightsGeometry = new THREE.SphereGeometry(earthRadius + 0.005, 32, 32); // Slightly larger sphere
+            const lightsGeometry = new THREE.SphereGeometry(earthRadius + 0.005, 32, 32);
             const lightsMaterial = new THREE.MeshBasicMaterial({
-                map: textureLoader.load(lightsTextureUrl,
-                    undefined,
-                    undefined,
-                    function(err) {
-                        console.error('An error occurred loading Earth lights texture:', err);
-                        // Removed showMessageBox call here
-                    }
-                ),
+                map: textureLoader.load(lightsTextureUrl, undefined, undefined, () => { console.warn('Failed to load Earth lights texture'); }),
                 transparent: true,
-                blending: THREE.AdditiveBlending, // For glowing effect
-                opacity: 0.8 // Adjust transparency as needed
+                blending: THREE.AdditiveBlending,
+                opacity: 0.8
             });
             const lightsMesh = new THREE.Mesh(lightsGeometry, lightsMaterial);
-            earthMesh.add(lightsMesh); // Add lights layer as child of Earth
+            earthMesh.addLevel(lightsMesh, 50);
         }
 
-
-        /**
-         * Creates a moon for a given planet.
-         * @param {THREE.Mesh} parentPlanetMesh - The mesh of the planet the moon orbits.
-         * @param {number} radius - Radius of the moon.
-         * @param {number} color - Hexadecimal color of the moon.
-         * @param {number} orbitRadius - Distance from the parent planet.
-         * @param {number} orbitSpeed - Speed of orbit around the parent planet.
-         */
-        function createMoon(parentPlanetMesh, radius, color, orbitRadius, orbitSpeed) {
-            const moonGeometry = new THREE.SphereGeometry(radius, 16, 16);
-            const moonMaterial = new THREE.MeshLambertMaterial({ color: color });
+        function createMoon(parentPlanetMesh, moonConfig) {
+            const moonGeometry = new THREE.SphereGeometry(moonConfig.radius, 16, 16);
+            const moonMaterial = new THREE.MeshLambertMaterial({ color: moonConfig.color });
             const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-
             const moonOrbitPivot = new THREE.Object3D();
-            parentPlanetMesh.add(moonOrbitPivot); // Moon orbits its parent planet
-
-            moon.position.x = orbitRadius;
+            parentPlanetMesh.add(moonOrbitPivot);
+            moon.position.x = moonConfig.orbit;
             moonOrbitPivot.add(moon);
-
             moons.push({
                 mesh: moon,
                 orbitPivot: moonOrbitPivot,
-                orbitSpeed: orbitSpeed,
-                rotationSpeed: Math.random() * 0.05 + 0.01 // Random rotation speed for moon itself
+                orbitSpeed: moonConfig.orbitSpeed,
+                rotationSpeed: Math.random() * 0.05 + 0.01
             });
         }
 
-        /**
-         * Creates rings for a given planet.
-         * @param {THREE.Mesh} planetMesh - The mesh of the planet to add rings to.
-         * @param {number} innerRadius - Inner radius of the rings.
-         * @param {number} outerRadius - Outer radius of the rings.
-         * @param {number} color - Hexadecimal color of the rings.
-         * @param {number} [opacity=0.7] - Opacity of the rings.
-         */
-        function createRing(planetMesh, innerRadius, outerRadius, color, opacity = 0.7) {
-            const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 64); // 64 segments for smoothness
+        function createRing(planetMesh, ringConfig) {
+            const ringGeometry = new THREE.RingGeometry(ringConfig.innerRadius, ringConfig.outerRadius, 64);
             const ringMaterial = new THREE.MeshBasicMaterial({
-                color: color,
-                side: THREE.DoubleSide, // Render both sides of the ring
+                color: ringConfig.color,
+                side: THREE.DoubleSide,
                 transparent: true,
-                opacity: opacity, // Use provided opacity
+                opacity: ringConfig.opacity,
             });
             const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-
-            // Rotate the rings to be horizontal (flat) relative to the planet
             ring.rotation.x = Math.PI / 2;
-
-            planetMesh.add(ring); // Add rings directly to the planet mesh
+            planetMesh.addLevel(ring, 50);
         }
 
-        /**
-         * Creates an asteroid belt.
-         * @param {number} innerRadius - Inner radius of the asteroid belt.
-         * @param {number} outerRadius - Outer radius of the asteroid belt.
-         * @param {number} numAsteroids - Number of asteroids in the belt.
-         */
-        function createAsteroidBelt(innerRadius, outerRadius, numAsteroids) {
-            const asteroidGeometry = new THREE.SphereGeometry(0.1, 8, 8); // Small spheres for asteroids
-            const asteroidMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Brownish color
-
-            for (let i = 0; i < numAsteroids; i++) {
-                const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-
-                // Random radius within the belt
-                const radius = innerRadius + Math.random() * (outerRadius - innerRadius);
-                // Random angle
+        function createAsteroidBelt() {
+            const { INNER_RADIUS, OUTER_RADIUS, NUM_ASTEROIDS, ASTEROID_RADIUS, COLOR, ORBIT_SPEED_MIN, ORBIT_SPEED_MAX, ROTATION_SPEED_MIN, ROTATION_SPEED_MAX } = Config.ASTEROID_BELT;
+            const geometry = new THREE.SphereGeometry(ASTEROID_RADIUS, 8, 8);
+            const material = new THREE.MeshLambertMaterial({ color: COLOR });
+            const instancedMesh = new THREE.InstancedMesh(geometry, material, NUM_ASTEROIDS);
+            const matrix = new THREE.Matrix4();
+            for (let i = 0; i < NUM_ASTEROIDS; i++) {
+                const radius = INNER_RADIUS + Math.random() * (OUTER_RADIUS - INNER_RADIUS);
                 const angle = Math.random() * Math.PI * 2;
-                // Slight random vertical displacement
-                const y = (Math.random() - 0.5) * 2; // Spread vertically a bit
-
-                asteroid.position.set(radius * Math.cos(angle), y, radius * Math.sin(angle));
-
-                // Store asteroid data for animation
+                const y = (Math.random() - 0.5) * 2;
+                matrix.setPosition(radius * Math.cos(angle), y, radius * Math.sin(angle));
+                instancedMesh.setMatrixAt(i, matrix);
                 asteroids.push({
-                    mesh: asteroid,
+                    index: i,
                     orbitRadius: radius,
-                    orbitSpeed: (Math.random() * 0.002) + 0.001, // Randomize speed
+                    orbitSpeed: (Math.random() * (ORBIT_SPEED_MAX - ORBIT_SPEED_MIN)) + ORBIT_SPEED_MIN,
                     angle: angle,
-                    rotationSpeed: (Math.random() * 0.02) + 0.005 // Randomize self-rotation
+                    rotationSpeed: (Math.random() * (ROTATION_SPEED_MAX - ROTATION_SPEED_MIN)) + ROTATION_SPEED_MIN
                 });
-
-                scene.add(asteroid);
             }
+            scene.add(instancedMesh);
+            asteroids.instancedMesh = instancedMesh;
         }
 
-        /**
-         * Creates a field of background stars and adds them to the scene.
-         */
         function createStars() {
-            const starGeometry = new THREE.SphereGeometry(0.2, 8, 8); // Slightly larger stars
-            const starMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }); // White color for stars
-
-            for (let i = 0; i < 1000; i++) { // Create 1000 stars
-                const star = new THREE.Mesh(starGeometry, starMaterial);
-
-                // Randomly position stars within a large sphere, far from the solar system
-                const maxStarDistance = 1500; // Adjusted distance to bring stars closer
-                const x = (Math.random() * 2 - 1) * maxStarDistance;
-                const y = (Math.random() * 2 - 1) * maxStarDistance;
-                const z = (Math.random() * 2 - 1) * maxStarDistance;
-
-                // Ensure stars are outside the nebula's outer radius
-                if (new THREE.Vector3(x, y, z).length() > 700) { // Nebula outer radius is 700
-                    star.position.set(x, y, z);
-                    scene.add(star);
+            const { COUNT, RADIUS, COLOR, MAX_DISTANCE, NEBULA_AVOID_RADIUS } = Config.STARS;
+            const geometry = new THREE.SphereGeometry(RADIUS, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color: COLOR });
+            const instancedMesh = new THREE.InstancedMesh(geometry, material, COUNT);
+            const matrix = new THREE.Matrix4();
+            let i = 0;
+            while (i < COUNT) {
+                const x = (Math.random() * 2 - 1) * MAX_DISTANCE;
+                const y = (Math.random() * 2 - 1) * MAX_DISTANCE;
+                const z = (Math.random() * 2 - 1) * MAX_DISTANCE;
+                if (new THREE.Vector3(x, y, z).length() > NEBULA_AVOID_RADIUS) {
+                    matrix.setPosition(x, y, z);
+                    instancedMesh.setMatrixAt(i, matrix);
+                    i++;
                 }
             }
+            scene.add(instancedMesh);
         }
 
-        /**
-         * Creates an organic nebula cloud using transparent spheroids with clustering.
-         */
         function createOrganicNebula() {
-            const numSpheroids = 30000; // Increased for more density and overlap
-            const nebulaOuterRadius = 700;
-            const nebulaInnerRadius = 200;
-            const clusterInfluence = 0.3; // How strongly particles are pulled towards a cluster center (0 to 1)
-
+            const { SPHEROID_COUNT, OUTER_RADIUS, INNER_RADIUS, CLUSTER_INFLUENCE, COLOR_PALETTE, SPHEROID_SIZE_MIN, SPHEROID_SIZE_MAX, OPACITY_MIN, OPACITY_MAX } = Config.NEBULA;
             nebulaGroup = new THREE.Group();
             scene.add(nebulaGroup);
-
-            // Only Purple and Magenta
-            const colorPalette = [
-                new THREE.Color(0xFF00FF), // Magenta
-                new THREE.Color(0x8000FF), // Purple
-                new THREE.Color(0xCC00CC), // Darker Magenta
-                new THREE.Color(0x660099)  // Darker Purple
-            ];
-
-            // Define a few cluster centers with associated colors
+            const clusterColors = COLOR_PALETTE.map(c => new THREE.Color(c));
             const nebulaClusterCenters = [
-                { position: new THREE.Vector3(300, 100, 200), color: colorPalette[0] },
-                { position: new THREE.Vector3(-250, -150, -300), color: colorPalette[1] },
-                { position: new THREE.Vector3(0, 300, -100), color: colorPalette[0] },
-                { position: new THREE.Vector3(150, -200, 350), color: colorPalette[1] },
-                { position: new THREE.Vector3(-350, 50, -50), color: colorPalette[0] },
-                { position: new THREE.Vector3(200, -250, -100), color: colorPalette[1] },
-                { position: new THREE.Vector3(-100, 180, 250), color: colorPalette[2] }, // More centers for better distribution
-                { position: new THREE.Vector3(250, 50, -250), color: colorPalette[3] },
-                { position: new THREE.Vector3(-150, -100, 150), color: colorPalette[2] },
-                { position: new THREE.Vector3(100, -50, -200), color: colorPalette[3] }
+                { position: new THREE.Vector3(300, 100, 200), color: clusterColors[0] },
+                { position: new THREE.Vector3(-250, -150, -300), color: clusterColors[1] },
+                { position: new THREE.Vector3(0, 300, -100), color: clusterColors[0] },
+                { position: new THREE.Vector3(150, -200, 350), color: clusterColors[1] },
+                { position: new THREE.Vector3(-350, 50, -50), color: clusterColors[0] },
+                { position: new THREE.Vector3(200, -250, -100), color: clusterColors[1] },
+                { position: new THREE.Vector3(-100, 180, 250), color: clusterColors[2] },
+                { position: new THREE.Vector3(250, 50, -250), color: clusterColors[3] },
+                { position: new THREE.Vector3(-150, -100, 150), color: clusterColors[2] },
+                { position: new THREE.Vector3(100, -50, -200), color: clusterColors[3] }
             ];
-
-            // Create a single geometry for all spheroids to optimize performance
-            const baseSpheroidGeometry = new THREE.SphereGeometry(1, 8, 8); // Base size 1, will be scaled per instance
-
-            for (let i = 0; i < numSpheroids; i++) {
-                // Generate a random initial position within the overall nebula annulus
-                let randomRadius = nebulaInnerRadius + Math.random() * (nebulaOuterRadius - nebulaInnerRadius);
+            const baseSpheroidGeometry = new THREE.SphereGeometry(1, 8, 8);
+            for (let i = 0; i < SPHEROID_COUNT; i++) {
+                let randomRadius = INNER_RADIUS + Math.random() * (OUTER_RADIUS - INNER_RADIUS);
                 let randomPhi = Math.acos(2 * Math.random() - 1);
                 let randomTheta = Math.random() * Math.PI * 2;
-
                 let particlePosition = new THREE.Vector3(randomRadius * Math.sin(randomPhi) * Math.cos(randomTheta),
                                                          randomRadius * Math.cos(randomPhi),
                                                          randomRadius * Math.sin(randomPhi) * Math.sin(randomTheta));
-
-                // Randomly pick one of the cluster centers to influence this particle
                 const clusterSeed = nebulaClusterCenters[Math.floor(Math.random() * nebulaClusterCenters.length)];
-
-                // Nudge the particle position towards the chosen cluster center
-                // The lerp function blends between two vectors. clusterInfluence controls the blend amount.
-                particlePosition.lerp(clusterSeed.position, clusterInfluence);
-
-                // Ensure particle is still within the overall nebula bounds after nudging
-                // If it moves outside the annulus, re-randomize its position within the annulus
+                particlePosition.lerp(clusterSeed.position, CLUSTER_INFLUENCE);
                 const distanceToOrigin = particlePosition.length();
-                if (distanceToOrigin < nebulaInnerRadius || distanceToOrigin > nebulaOuterRadius) {
-                     randomRadius = nebulaInnerRadius + Math.random() * (nebulaOuterRadius - nebulaInnerRadius);
-                     randomPhi = Math.acos(2 * Math.random() - 1);
-                     randomTheta = Math.random() * Math.PI * 2;
-                     particlePosition.set(randomRadius * Math.sin(randomPhi) * Math.cos(randomTheta),
-                                          randomRadius * Math.cos(randomPhi),
-                                          randomRadius * Math.sin(randomPhi) * Math.sin(randomTheta));
+                if (distanceToOrigin < INNER_RADIUS || distanceToOrigin > OUTER_RADIUS) {
+                    randomRadius = INNER_RADIUS + Math.random() * (OUTER_RADIUS - INNER_RADIUS);
+                    randomPhi = Math.acos(2 * Math.random() - 1);
+                    randomTheta = Math.random() * Math.PI * 2;
+                    particlePosition.set(randomRadius * Math.sin(randomPhi) * Math.cos(randomTheta),
+                                         randomRadius * Math.cos(randomPhi),
+                                         randomRadius * Math.sin(randomPhi) * Math.sin(randomTheta));
                 }
-
-
-                // Random size for each spheroid
-                const spheroidRadius = Math.random() * 8 + 2; // Size between 2 and 10 (increased for more overlap/blur)
-
+                const spheroidRadius = Math.random() * (SPHEROID_SIZE_MAX - SPHEROID_SIZE_MIN) + SPHEROID_SIZE_MIN;
                 const spheroidMaterial = new THREE.MeshBasicMaterial({
-                    color: clusterSeed.color, // Use the color of the chosen cluster
+                    color: clusterSeed.color,
                     transparent: true,
-                    opacity: Math.random() * 0.005 + 0.0001, // Varying very low opacity (0.0001 to 0.0051) for extreme blur
-                    blending: THREE.AdditiveBlending, // For glowing, ethereal effect
-                    depthWrite: false // Important for transparent objects to render correctly
+                    opacity: Math.random() * (OPACITY_MAX - OPACITY_MIN) + OPACITY_MIN,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
                 });
-
-                const spheroid = new THREE.Mesh(baseSpheroidGeometry, spheroidMaterial); // Use the shared geometry
-                spheroid.position.copy(particlePosition); // Set position from the calculated vector
-                spheroid.scale.set(spheroidRadius, spheroidRadius, spheroidRadius); // Scale the mesh
-                nebulaGroup.add(spheroid); // Add to the group
+                const spheroid = new THREE.Mesh(baseSpheroidGeometry, spheroidMaterial);
+                spheroid.position.copy(particlePosition);
+                spheroid.scale.set(spheroidRadius, spheroidRadius, spheroidRadius);
+                nebulaGroup.add(spheroid);
             }
         }
 
-        /**
-         * Creates magnetic field lines for a given celestial body using a dipole model.
-         * @param {THREE.Object3D} celestialBodyMesh - The mesh of the celestial body to attach lines to.
-         * @param {number} bodyRadius - The radius of the celestial body.
-         * @param {number} numLines - Number of field lines to generate.
-         * @param {number} fieldExtentEquatorial - The equatorial radius (r_e) for the field lines, determining their max extent.
-         * @param {number} lineColor - Hexadecimal color for the field lines.
-         */
         function createMagneticFieldLines(celestialBodyMesh, bodyRadius, numLines, fieldExtentEquatorial, lineColor) {
             const fieldLinesGroup = new THREE.Group();
-            fieldLinesGroup.visible = false; // Hidden by default
-
-            const lineSegments = 100; // Number of segments per line for smoothness
+            fieldLinesGroup.visible = false;
+            const lineSegments = 100;
             const lineMaterial = new THREE.LineBasicMaterial({
                 color: lineColor,
                 transparent: true,
-                opacity: 0.6,
-                linewidth: 1 // Note: linewidth is not widely supported across all renderers
+                opacity: 0.6
             });
-
-            // Iterate to create lines starting from various points on the "north" hemisphere
             for (let i = 0; i < numLines; i++) {
-                // Start points slightly above the surface, distributed across a range of latitudes
-                const initialRadius = bodyRadius * 1.05; // Start slightly outside the body
-                // Adjust initialPhi range for better field line distribution, especially for weaker fields
-                const initialPhi = Math.PI * Math.random() * 0.45; // Start from near pole (0) to mid-latitude (0.45*PI)
-                const initialTheta = Math.random() * Math.PI * 2; // Random longitude
-
-                // Calculate the equatorial radius (r_e) for this specific field line
-                // r = r_e * sin^2(phi_polar) => r_e = r / sin^2(phi_polar)
-                // Use fieldExtentEquatorial as the maximum r_e for lines that go far out
+                const initialRadius = bodyRadius * 1.05;
+                const initialPhi = Math.PI * Math.random() * 0.45;
+                const initialTheta = Math.random() * Math.PI * 2;
                 let r_equatorial = initialRadius / (Math.sin(initialPhi) * Math.sin(initialPhi));
-
-                // If r_equatorial is too large, it means the line would extend too far or be too flat.
-                // Clamp it to the desired maximum extent.
                 const actualREquatorial = Math.min(r_equatorial, fieldExtentEquatorial);
-
                 const points = [];
-                // Trace the field line from initialPhi towards the opposite hemisphere
-                const phiStep = (Math.PI - 2 * initialPhi) / lineSegments; // Step size for polar angle to go from initialPhi to PI - initialPhi
-
+                const phiStep = (Math.PI - 2 * initialPhi) / lineSegments;
                 for (let j = 0; j <= lineSegments; j++) {
                     const currentPhiPolar = initialPhi + j * phiStep;
-
-                    // Calculate radial distance using the dipole field line equation
                     const r = actualREquatorial * Math.sin(currentPhiPolar) * Math.sin(currentPhiPolar);
-
-                    // If the point dips below the surface, stop tracing this line
-                    if (r < bodyRadius * 0.95) { // Adjusted threshold to be slightly inside for visual continuity
+                    if (r < bodyRadius * 0.95) {
                         break;
                     }
-
-                    const x = r * Math.sin(currentPhiPolar) * Math.cos(initialTheta); // initialTheta is fixed for this line's plane
+                    const x = r * Math.sin(currentPhiPolar) * Math.cos(initialTheta);
                     const y = r * Math.cos(currentPhiPolar);
                     const z = r * Math.sin(currentPhiPolar) * Math.sin(initialTheta);
-
                     points.push(new THREE.Vector3(x, y, z));
                 }
-
-                // Only add the line if it has enough points to form a visible curve
-                if (points.length > 5) { // Require at least 5 points to prevent very short/invisible lines
+                if (points.length > 5) {
                     const geometry = new THREE.BufferGeometry().setFromPoints(points);
                     const line = new THREE.Line(geometry, lineMaterial);
                     fieldLinesGroup.add(line);
                 }
             }
-
-            celestialBodyMesh.add(fieldLinesGroup); // Add field lines to the celestial body's mesh
-            planetFieldLines.push(fieldLinesGroup); // Store group for toggling
+            celestialBodyMesh.add(fieldLinesGroup);
+            planetFieldLines.push(fieldLinesGroup);
         }
 
-        /**
-         * Toggles the visibility of all magnetic field lines.
-         */
         function toggleMagneticFieldLines() {
             planetFieldLines.forEach(group => {
                 group.visible = !group.visible;
             });
         }
 
-        /**
-         * Creates a simple spaceship model.
-         */
         function createSpaceship() {
             spaceship = new THREE.Group();
             scene.add(spaceship);
-            spaceship.visible = false; // Hidden by default
-
-            // Main body (cone)
+            spaceship.visible = false;
             const bodyGeometry = new THREE.ConeGeometry(2, 8, 8);
             const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0xAAAAAA, emissive: 0x111111 });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.rotation.x = Math.PI / 2; // Point along Z-axis
+            body.rotation.x = Math.PI / 2;
             spaceship.add(body);
-
-            // Cockpit (sphere)
             const cockpitGeometry = new THREE.SphereGeometry(1.5, 16, 16);
             const cockpitMaterial = new THREE.MeshPhongMaterial({ color: 0x00BFFF, emissive: 0x0000FF, shininess: 50 });
             const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
             cockpit.position.z = 4;
             spaceship.add(cockpit);
-
-            // Thrusters (small cones/cylinders)
             const thrusterGeometry = new THREE.CylinderGeometry(0.5, 0.8, 2, 8);
             const thrusterMaterial = new THREE.MeshPhongMaterial({ color: 0xFF0000, emissive: 0x880000 });
-
             const thruster1 = new THREE.Mesh(thrusterGeometry, thrusterMaterial);
             thruster1.position.set(-1.5, 0, -5);
             thruster1.rotation.x = Math.PI / 2;
             spaceship.add(thruster1);
-
             const thruster2 = new THREE.Mesh(thrusterGeometry, thrusterMaterial);
             thruster2.position.set(1.5, 0, -5);
             thruster2.rotation.x = Math.PI / 2;
             spaceship.add(thruster2);
-
-            // Initial position for the spaceship
+            const thrusterGlowGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            const thrusterGlowMaterial = new THREE.MeshBasicMaterial({ color: 0xFF4500, transparent: true, opacity: 0, blending: THREE.AdditiveBlending });
+            const thrusterGlow1 = new THREE.Mesh(thrusterGlowGeometry, thrusterGlowMaterial);
+            thrusterGlow1.position.set(-1.5, 0, -6);
+            spaceship.add(thrusterGlow1);
+            const thrusterGlow2 = new THREE.Mesh(thrusterGlowGeometry, thrusterGlowMaterial);
+            thrusterGlow2.position.set(1.5, 0, -6);
+            spaceship.add(thrusterGlow2);
+            spaceship.thrusterGlows = [thrusterGlow1, thrusterGlow2];
             spaceship.position.set(0, 0, 50);
         }
 
-        /**
-         * Toggles between orbital camera and spaceship camera mode.
-         */
         function toggleSpaceshipMode() {
             if (cameraMode === 'orbit') {
                 cameraMode = 'spaceship';
                 spaceship.visible = true;
-                // Position spaceship near current camera target for smooth transition
                 spaceship.position.copy(camera.position);
                 spaceship.lookAt(currentCameraTarget.getWorldPosition(tempVector));
-                // Reset orbital camera state when entering spaceship mode
                 orbitRadius = camera.position.distanceTo(currentCameraTarget.getWorldPosition(tempVector));
                 const sphericalCoords = cartesianToSpherical(
                     camera.position.x - currentCameraTarget.getWorldPosition(tempVector).x,
-                    camera.position.y - currentCameraTarget.getWorldPosition(temp2Vector).y, // Corrected typo here
+                    camera.position.y - currentCameraTarget.getWorldPosition(tempVector).y,
                     camera.position.z - currentCameraTarget.getWorldPosition(tempVector).z
                 );
                 orbitTheta = sphericalCoords.theta;
                 orbitPhi = sphericalCoords.phi;
-
             } else {
                 cameraMode = 'orbit';
                 spaceship.visible = false;
-                // When exiting spaceship mode, set orbital camera target back to star
                 currentCameraTarget = star;
-                isAnimatingCamera = true; // Smoothly transition back to star orbit
-                // Set target orbit parameters to current camera position relative to star
+                isAnimatingCamera = true;
                 const starWorldPosition = star.getWorldPosition(tempVector);
                 const relativeCameraPos = camera.position.clone().sub(starWorldPosition);
                 const sphericalCoords = cartesianToSpherical(relativeCameraPos.x, relativeCameraPos.y, relativeCameraPos.z);
@@ -978,27 +693,215 @@
                 targetOrbitTheta = sphericalCoords.theta;
                 targetOrbitPhi = sphericalCoords.phi;
             }
-            updateFocusReleaseButtonVisibility(); // Update button visibility based on mode
+            updateFocusReleaseButtonVisibility();
         }
 
-        /**
-         * Handles keyboard key down events for spaceship control.
-         * @param {KeyboardEvent} event - The keyboard event.
-         */
+        function createStaticGravityGrid() {
+            const { GRID_SIZE, GRID_SPACING, STATIC_GRID_RENDER_INTERVAL, STATIC_PARTICLE_SIZE, STATIC_PARTICLE_OPACITY, STATIC_PARTICLE_COLOR } = Config.GRAVITY_FIELD;
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            for (let x = -GRID_SIZE / 2; x <= GRID_SIZE / 2; x += STATIC_GRID_RENDER_INTERVAL) {
+                for (let y = -GRID_SIZE / 2; y <= GRID_SIZE / 2; y += STATIC_GRID_RENDER_INTERVAL) {
+                    for (let z = -GRID_SIZE / 2; z <= GRID_SIZE / 2; z += STATIC_GRID_RENDER_INTERVAL) {
+                        positions.push(x, y, z);
+                        staticGridPositions.push(new THREE.Vector3(x, y, z));
+                    }
+                }
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            const material = new THREE.PointsMaterial({
+                color: STATIC_PARTICLE_COLOR,
+                size: STATIC_PARTICLE_SIZE,
+                transparent: true,
+                opacity: STATIC_PARTICLE_OPACITY,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+            staticGridParticles = new THREE.Points(geometry, material);
+            staticGridParticles.visible = gravityFieldVisible;
+            scene.add(staticGridParticles);
+        }
+
+        function createFallingGravityParticles() {
+            const { FALLING_PARTICLE_COUNT, FALLING_PARTICLE_SIZE, FALLING_PARTICLE_OPACITY, FALLING_PARTICLE_COLOR_START, FALLING_PARTICLE_MIN_LIFETIME, FALLING_PARTICLE_MAX_LIFETIME } = Config.GRAVITY_FIELD;
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+            if (staticGridPositions.length === 0) {
+                for (let i = 0; i < FALLING_PARTICLE_COUNT; i++) {
+                    const x = (Math.random() * Config.GRAVITY_FIELD.GRID_SIZE) - Config.GRAVITY_FIELD.GRID_SIZE / 2;
+                    const y = (Math.random() * Config.GRAVITY_FIELD.GRID_SIZE) - Config.GRAVITY_FIELD.GRID_SIZE / 2;
+                    const z = (Math.random() * Config.GRAVITY_FIELD.GRID_SIZE) - Config.GRAVITY_FIELD.GRID_SIZE / 2;
+                    positions.push(x, y, z);
+                    colors.push(colorStart.r, colorStart.g, colorStart.b);
+                    fallingParticlesData.push({
+                        position: new THREE.Vector3(x, y, z),
+                        velocity: new THREE.Vector3(),
+                        originalGridPointIndex: -1,
+                        age: Math.random() * FALLING_PARTICLE_MAX_LIFETIME,
+                        maxAge: Math.random() * (FALLING_PARTICLE_MAX_LIFETIME - FALLING_PARTICLE_MIN_LIFETIME) + FALLING_PARTICLE_MIN_LIFETIME
+                    });
+                }
+            } else {
+                for (let i = 0; i < FALLING_PARTICLE_COUNT; i++) {
+                    const randomGridIndex = Math.floor(Math.random() * staticGridPositions.length);
+                    const initialPos = staticGridPositions[randomGridIndex];
+                    positions.push(initialPos.x, initialPos.y, initialPos.z);
+                    colors.push(colorStart.r, colorStart.g, colorStart.b);
+                    fallingParticlesData.push({
+                        position: initialPos.clone(),
+                        velocity: new THREE.Vector3(),
+                        originalGridPointIndex: randomGridIndex,
+                        age: Math.random() * FALLING_PARTICLE_MAX_LIFETIME,
+                        maxAge: Math.random() * (FALLING_PARTICLE_MAX_LIFETIME - FALLING_PARTICLE_MIN_LIFETIME) + FALLING_PARTICLE_MIN_LIFETIME
+                    });
+                }
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            const material = new THREE.PointsMaterial({
+                size: FALLING_PARTICLE_SIZE,
+                vertexColors: true,
+                transparent: true,
+                opacity: FALLING_PARTICLE_OPACITY,
+                blending: THREE.AdditiveBlending,
+                sizeAttenuation: true
+            });
+            fallingGravityParticles = new THREE.Points(geometry, material);
+            fallingGravityParticles.visible = gravityFieldVisible;
+            scene.add(fallingGravityParticles);
+        }
+
+        function updateGravitySimulation() {
+            if (!gravityFieldVisible || !fallingGravityParticles) return;
+            const positionsArray = fallingGravityParticles.geometry.attributes.position.array;
+            const colorsArray = fallingGravityParticles.geometry.attributes.color.array;
+            const { GRAVITY_STRENGTH, VELOCITY_DECAY, RESET_THRESHOLD_RADIUS_MULTIPLIER, MAX_PARTICLE_DISPLACEMENT, COLOR_CHANGE_DISTANCE_FACTOR } = Config.GRAVITY_FIELD;
+            const celestialBodies = [
+                { mesh: star, visualMass: Config.STAR.VISUAL_MASS, radius: Config.STAR.RADIUS }
+            ].concat(planets.map(p => ({
+                mesh: p.mesh, visualMass: p.visualMass, radius: p.mesh.children[0].geometry.parameters.radius
+            })));
+            for (let i = 0; i < fallingParticlesData.length; i++) {
+                const particle = fallingParticlesData[i];
+                let totalForce = new THREE.Vector3();
+                let closestDistance = Infinity;
+                celestialBodies.forEach(body => {
+                    const bodyWorldPos = body.mesh.getWorldPosition(tempVector);
+                    const direction = bodyWorldPos.clone().sub(particle.position);
+                    let distance = direction.length();
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                    }
+                    const minDistance = body.radius * 0.5;
+                    if (distance < minDistance) {
+                        distance = minDistance;
+                    }
+                    const forceMagnitude = (GRAVITY_STRENGTH * body.visualMass) / (distance * distance);
+                    tempForce.copy(direction).normalize().multiplyScalar(forceMagnitude);
+                    totalForce.add(tempForce);
+                    if (distance < body.radius * RESET_THRESHOLD_RADIUS_MULTIPLIER) {
+                        resetFallingParticle(i);
+                        return;
+                    }
+                });
+                particle.velocity.add(totalForce);
+                particle.velocity.multiplyScalar(VELOCITY_DECAY);
+                particle.position.add(particle.velocity);
+                particle.age++;
+                if (particle.age > particle.maxAge || (particle.originalGridPointIndex !== -1 && particle.position.distanceTo(staticGridPositions[particle.originalGridPointIndex]) > MAX_PARTICLE_DISPLACEMENT)) {
+                    resetFallingParticle(i);
+                }
+                positionsArray[i * 3] = particle.position.x;
+                positionsArray[i * 3 + 1] = particle.position.y;
+                positionsArray[i * 3 + 2] = particle.position.z;
+                const normalizedDistance = Math.min(1, closestDistance / COLOR_CHANGE_DISTANCE_FACTOR);
+                tempColor.copy(colorStart).lerp(colorEnd, 1 - normalizedDistance);
+                colorsArray[i * 3] = tempColor.r;
+                colorsArray[i * 3 + 1] = tempColor.g;
+                colorsArray[i * 3 + 2] = tempColor.b;
+            }
+            fallingGravityParticles.geometry.attributes.position.needsUpdate = true;
+            fallingGravityParticles.geometry.attributes.color.needsUpdate = true;
+            if (gravityFadeOpacity < 1 && gravityFieldVisible) {
+                gravityFadeOpacity = Math.min(1, gravityFadeOpacity + 0.016 / (Config.GRAVITY_FIELD.FADE_DURATION / 1000));
+                staticGridParticles.material.opacity = Config.GRAVITY_FIELD.STATIC_PARTICLE_OPACITY * gravityFadeOpacity;
+                fallingGravityParticles.material.opacity = Config.GRAVITY_FIELD.FALLING_PARTICLE_OPACITY * gravityFadeOpacity;
+            } else if (gravityFadeOpacity > 0 && !gravityFieldVisible) {
+                gravityFadeOpacity = Math.max(0, gravityFadeOpacity - 0.016 / (Config.GRAVITY_FIELD.FADE_DURATION / 1000));
+                staticGridParticles.material.opacity = Config.GRAVITY_FIELD.STATIC_PARTICLE_OPACITY * gravityFadeOpacity;
+                fallingGravityParticles.material.opacity = Config.GRAVITY_FIELD.FALLING_PARTICLE_OPACITY * gravityFadeOpacity;
+            }
+        }
+
+        function resetFallingParticle(index) {
+            const { FALLING_PARTICLE_MIN_LIFETIME, FALLING_PARTICLE_MAX_LIFETIME } = Config.GRAVITY_FIELD;
+            if (staticGridPositions.length > 0) {
+                const randomGridIndex = Math.floor(Math.random() * staticGridPositions.length);
+                const newPos = staticGridPositions[randomGridIndex];
+                fallingParticlesData[index].position.copy(newPos);
+                fallingParticlesData[index].originalGridPointIndex = randomGridIndex;
+            } else {
+                const { GRID_SIZE } = Config.GRAVITY_FIELD;
+                const halfGrid = GRID_SIZE / 2;
+                const x = (Math.random() * GRID_SIZE) - halfGrid;
+                const y = (Math.random() * GRID_SIZE) - halfGrid;
+                const z = (Math.random() * GRID_SIZE) - halfGrid;
+                fallingParticlesData[index].position.set(x, y, z);
+                fallingParticlesData[index].originalGridPointIndex = -1;
+            }
+            fallingParticlesData[index].velocity.set(0, 0, 0);
+            fallingParticlesData[index].age = 0;
+            fallingParticlesData[index].maxAge = Math.random() * (FALLING_PARTICLE_MAX_LIFETIME - FALLING_PARTICLE_MIN_LIFETIME) + FALLING_PARTICLE_MIN_LIFETIME;
+        }
+
+        function toggleGravityField() {
+            gravityFieldVisible = !gravityFieldVisible;
+            staticGridParticles.visible = gravityFadeOpacity > 0 || gravityFieldVisible;
+            fallingGravityParticles.visible = gravityFadeOpacity > 0 || gravityFieldVisible;
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            togglePauseButton.textContent = isPaused ? '▶️' : '⏯️';
+        }
+
+        function updateInfoPanel() {
+            if (currentCameraTarget === star) {
+                infoPanel.style.display = 'none';
+            } else {
+                const planetData = planets.find(p => p.mesh === currentCameraTarget);
+                if (planetData) {
+                    const planetConfig = Config.PLANETS.find(p => p.name === planetData.name);
+                    infoPanel.innerHTML = `
+                        <b>${planetData.name}</b><br>
+                        Radius: ${planetConfig.radius} units<br>
+                        Orbit: ${planetConfig.orbit} units<br>
+                        Mass: ${planetConfig.visualMass} units
+                    `;
+                    infoPanel.style.display = 'block';
+                }
+            }
+        }
+
         function onDocumentKeyDown(event) {
             const key = event.key.toLowerCase();
+            if (key === 'h') {
+                toggleHelpOverlay();
+                return;
+            }
             if (cameraMode === 'spaceship') {
                 if (key === 'w') keyboardState.w = true;
                 if (key === 's') keyboardState.s = true;
                 if (key === 'a') keyboardState.a = true;
                 if (key === 'd') keyboardState.d = true;
-            } else { // Handle number keys for orbit mode
+            } else {
                 if (key === '0') {
                     if (currentCameraTarget !== star) {
                         focusCameraOn(star);
                     }
                 } else if (key >= '1' && key <= '9') {
-                    const planetIndex = parseInt(key) - 1; // Convert key to 0-based index
+                    const planetIndex = parseInt(key) - 1;
                     if (planetIndex >= 0 && planetIndex < planets.length) {
                         const targetPlanet = planets[planetIndex].mesh;
                         if (currentCameraTarget !== targetPlanet) {
@@ -1011,10 +914,6 @@
             }
         }
 
-        /**
-         * Handles keyboard key up events for spaceship control.
-         * @param {KeyboardEvent} event - The keyboard event.
-         */
         function onDocumentKeyUp(event) {
             const key = event.key.toLowerCase();
             if (cameraMode === 'spaceship') {
@@ -1025,10 +924,6 @@
             }
         }
 
-        /**
-         * Handles mouse down event to start dragging for orbit control or steering.
-         * @param {MouseEvent} event - The mouse event.
-         */
         function onDocumentMouseDown(event) {
             event.preventDefault();
             if (cameraMode === 'orbit') {
@@ -1038,124 +933,87 @@
                 isAnimatingCamera = false;
             } else if (cameraMode === 'spaceship') {
                 isSteering = true;
-                document.body.style.cursor = 'grabbing'; // Change cursor
+                document.body.style.cursor = 'grabbing';
             }
         }
 
-        /**
-         * Handles mouse up event to stop dragging or steering.
-         * @param {MouseEvent} event - The mouse event.
-         */
         function onDocumentMouseUp(event) {
             event.preventDefault();
             isDragging = false;
             if (cameraMode === 'spaceship') {
-                isSteering = false;
-                document.body.style.cursor = 'default'; // Reset cursor
+                document.body.style.cursor = 'default';
             }
         }
 
-        /**
-         * Handles mouse move event for camera orbit rotation when dragging and for hover effect.
-         * Also handles spaceship steering.
-         * @param {MouseEvent} event - The mouse event.
-         */
         function onDocumentMouseMove(event) {
-            // Update mouse coordinates for raycasting (always needed for hover)
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-            // Perform raycasting for hover effect (only in orbit mode for planets)
             if (cameraMode === 'orbit') {
                 raycaster.setFromCamera(mouse, camera);
-                const intersectableMeshes = planets.map(p => p.mesh);
+                const intersectableMeshes = planets.map(p => p.mesh.children[0]);
                 const intersects = raycaster.intersectObjects(intersectableMeshes);
-
                 if (intersects.length > 0) {
-                    const newHoveredPlanet = intersects[0].object;
+                    const newHoveredPlanet = intersects[0].object.parent;
                     if (hoveredPlanet !== newHoveredPlanet) {
                         if (hoveredPlanet) {
-                            hoveredPlanet.material.emissive.setHex(hoveredPlanet.userData.originalEmissiveColor);
+                            hoveredPlanet.children[0].material.emissive.setHex(hoveredPlanet.userData.originalEmissiveColor);
                         }
                         hoveredPlanet = newHoveredPlanet;
-                        hoveredPlanet.material.emissive.setHex(0x00FF00); // Green highlight
+                        hoveredPlanet.children[0].material.emissive.setHex(0x00FF00);
                     }
                 } else {
                     if (hoveredPlanet) {
-                        hoveredPlanet.material.emissive.setHex(hoveredPlanet.userData.originalEmissiveColor);
+                        hoveredPlanet.children[0].material.emissive.setHex(hoveredPlanet.userData.originalEmissiveColor);
                         hoveredPlanet = null;
                     }
                 }
             }
-
-
-            // Handle camera dragging or spaceship steering
             if (isDragging && cameraMode === 'orbit') {
                 const deltaX = event.clientX - previousMouseX;
                 const deltaY = event.clientY - previousMouseY;
-
-                orbitTheta += -deltaX * orbitRotationSpeed; // Update horizontal angle
-                orbitPhi += deltaY * orbitRotationSpeed; // Update vertical angle
-
-                // Clamp orbitPhi to prevent camera flipping over the poles
+                orbitTheta += -deltaX * Config.CAMERA.ORBIT_ROTATION_SPEED;
+                orbitPhi += deltaY * Config.CAMERA.ORBIT_ROTATION_SPEED;
                 orbitPhi = Math.max(0.01, Math.min(Math.PI - 0.01, orbitPhi));
-
                 previousMouseX = event.clientX;
                 previousMouseY = event.clientY;
             } else if (isSteering && cameraMode === 'spaceship') {
-                const deltaX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-                const deltaY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-                mouseLookX += deltaX * spaceshipRotationSpeed;
-                mouseLookY += deltaY * spaceshipRotationSpeed;
-
-                // Clamp vertical look to prevent flipping
+                const deltaX = event.movementX || 0;
+                const deltaY = event.movementY || 0;
+                mouseLookX += deltaX * Config.SPACESHIP.ROTATION_SPEED;
+                mouseLookY += deltaY * Config.SPACESHIP.ROTATION_SPEED;
                 mouseLookY = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseLookY));
             }
         }
 
-        /**
-         * Handles mouse wheel event for zooming in and out (only in orbit mode).
-         * @param {WheelEvent} event - The mouse wheel event.
-         */
         function onDocumentMouseWheel(event) {
-            event.preventDefault(); // Prevent page scrolling
+            event.preventDefault();
             if (cameraMode === 'orbit') {
-                isAnimatingCamera = false; // Stop any ongoing camera animation if user starts zooming
-
-                // Adjust radius based on wheel direction
-                orbitRadius += event.deltaY * orbitZoomSpeed;
-
-                // Clamp radius within min/max zoom limits
-                orbitRadius = Math.max(minOrbitRadius, Math.min(maxOrbitRadius, orbitRadius));
-
-                // Update targetOrbitRadius immediately if user zooms
+                isAnimatingCamera = false;
+                let minZoom = Config.CAMERA.ORBIT_RADIUS_MIN;
+                let maxZoom = Config.CAMERA.ORBIT_RADIUS_MAX;
+                if (currentCameraTarget !== star) {
+                    const planetData = planets.find(p => p.mesh === currentCameraTarget);
+                    if (planetData) {
+                        minZoom = planetData.mesh.children[0].geometry.parameters.radius * 1.5;
+                        maxZoom = planetData.mesh.children[0].geometry.parameters.radius * 20;
+                    }
+                }
+                orbitRadius += event.deltaY * Config.CAMERA.ORBIT_ZOOM_SPEED;
+                orbitRadius = Math.max(minZoom, Math.min(maxZoom, orbitRadius));
                 targetOrbitRadius = orbitRadius;
             }
         }
 
-        /**
-         * Handles click event to focus the camera on a planet (only in orbit mode).
-         * @param {MouseEvent} event - The mouse event.
-         */
         function onDocumentClick(event) {
             if (cameraMode === 'orbit') {
-                // Calculate mouse position in normalized device coordinates (-1 to +1) for both components
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-                // Update the raycaster with the camera and mouse position
                 raycaster.setFromCamera(mouse, camera);
-
-                // Calculate objects intersecting the ray
-                const intersectableMeshes = planets.map(p => p.mesh);
+                const intersectableMeshes = planets.map(p => p.mesh.children[0]);
                 const intersects = raycaster.intersectObjects(intersectableMeshes);
-
                 if (intersects.length > 0) {
-                    // An object was clicked, check if it's a planet
-                    const clickedObject = intersects[0].object;
+                    const clickedObject = intersects[0].object.parent;
                     const foundPlanet = planets.find(p => p.mesh === clickedObject);
-
                     if (foundPlanet && currentCameraTarget !== foundPlanet.mesh) {
                         focusCameraOn(foundPlanet.mesh);
                     }
@@ -1163,121 +1021,213 @@
             }
         }
 
-        /**
-         * Handles keydown events for number keys to focus on planets or unfocus.
-         * @param {KeyboardEvent} event - The keyboard event.
-         */
-        function onDocumentKeyDown(event) {
-            const key = event.key.toLowerCase();
-            if (cameraMode === 'spaceship') {
-                if (key === 'w') keyboardState.w = true;
-                if (key === 's') keyboardState.s = true;
-                if (key === 'a') keyboardState.a = true;
-                if (key === 'd') keyboardState.d = true;
-            } else { // Handle number keys for orbit mode
-                if (key === '0') {
-                    if (currentCameraTarget !== star) {
-                        focusCameraOn(star);
-                    }
-                } else if (key >= '1' && key <= '9') {
-                    const planetIndex = parseInt(key) - 1; // Convert key to 0-based index
-                    if (planetIndex >= 0 && planetIndex < planets.length) {
-                        const targetPlanet = planets[planetIndex].mesh;
-                        if (currentCameraTarget !== targetPlanet) {
-                            focusCameraOn(targetPlanet);
-                        }
-                    } else {
-                        showMessageBox(`Planet ${key} does not exist in this system.`);
-                    }
-                }
+        function onTouchStart(event) {
+            if (event.touches.length === 1 && cameraMode === 'orbit') {
+                touchStartX = event.touches[0].clientX;
+                touchStartY = event.touches[0].clientY;
+                isDragging = true;
+                isAnimatingCamera = false;
             }
         }
 
-        /**
-         * Handles keyboard key up events for spaceship control.
-         * @param {KeyboardEvent} event - The keyboard event.
-         */
-        function onDocumentKeyUp(event) {
-            const key = event.key.toLowerCase();
-            if (cameraMode === 'spaceship') {
-                if (key === 'w') keyboardState.w = false;
-                if (key === 's') keyboardState.s = false;
-                if (key === 'a') keyboardState.a = false;
-                if (key === 'd') keyboardState.d = false;
+        function onTouchMove(event) {
+            if (isDragging && cameraMode === 'orbit' && event.touches.length === 1) {
+                event.preventDefault();
+                const touchX = event.touches[0].clientX;
+                const touchY = event.touches[0].clientY;
+                const deltaX = touchX - touchStartX;
+                const deltaY = touchY - touchStartY;
+                orbitTheta += -deltaX * Config.CAMERA.ORBIT_ROTATION_SPEED * 0.5;
+                orbitPhi += deltaY * Config.CAMERA.ORBIT_ROTATION_SPEED * 0.5;
+                orbitPhi = Math.max(0.01, Math.min(Math.PI - 0.01, orbitPhi));
+                touchStartX = touchX;
+                touchStartY = touchY;
             }
         }
 
-        /**
-         * Handles click event on the focus release button.
-         */
+        function onTouchEnd() {
+            isDragging = false;
+        }
+
         function onFocusReleaseButtonClick() {
             if (currentCameraTarget !== star) {
-                focusCameraOn(star); // Unfocus and go back to the star
+                focusCameraOn(star);
             }
         }
 
-        /**
-         * Updates the visibility of the focus release button.
-         */
         function updateFocusReleaseButtonVisibility() {
-            if (cameraMode === 'orbit' && currentCameraTarget !== star) {
-                focusReleaseButton.style.display = 'flex'; // Show button if focused on planet in orbit mode
-            } else {
-                focusReleaseButton.style.display = 'none'; // Hide button otherwise
-            }
+            focusReleaseButton.style.display = (cameraMode === 'orbit' && currentCameraTarget !== star) ? 'flex' : 'none';
         }
 
-        /**
-         * Smoothly transitions the camera to focus on a new target object.
-         * @param {THREE.Object3D} newTarget - The new object to focus on (star or planet mesh).
-         */
-        function focusCameraOn(newTarget) {
-            // If in spaceship mode, switch to orbit mode first
-            if (cameraMode === 'spaceship') {
-                toggleSpaceshipMode(); // This will set currentCameraTarget to star and trigger animation
-                // Then, after a short delay, focus on the desired newTarget
-                setTimeout(() => {
-                    if (newTarget !== star) { // Avoid double-focusing if already going to star
-                         focusCameraOn(newTarget); // Recursive call to focus on specific planet
-                    }
-                }, 500); // Small delay to allow mode switch animation to start
-                return; // Exit to prevent immediate orbit logic
+        function createPlanetButtonIcon(planetData, buttonElement) {
+            const iconScene = new THREE.Scene();
+            const iconCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+            iconCamera.position.z = planetData.mesh.children[0].geometry.parameters.radius * 2.5;
+            iconCamera.lookAt(0, 0, 0);
+            const iconLight = new THREE.PointLight(0xFFFFFF, 1.0);
+            iconLight.position.set(5, 5, 5);
+            iconScene.add(iconLight);
+            iconScene.add(new THREE.AmbientLight(0x404040, 0.5));
+            const clonedPlanet = planetData.mesh.clone();
+            clonedPlanet.position.set(0, 0, 0);
+            if (planetData.name === "Saturn" || planetData.name === "Neptune") {
+                clonedPlanet.rotation.x = Math.PI / 6;
             }
+            iconScene.add(clonedPlanet);
+            const planetConfig = Config.PLANETS.find(p => p.name === planetData.name);
+            if (planetConfig && planetConfig.rings) {
+                const ringGeometry = new THREE.RingGeometry(planetConfig.rings.innerRadius, planetConfig.rings.outerRadius, 64);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: planetConfig.rings.color,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: planetConfig.rings.opacity,
+                });
+                const clonedRings = new THREE.Mesh(ringGeometry, ringMaterial);
+                clonedRings.position.set(0, 0, 0);
+                clonedRings.rotation.x = Math.PI / 2;
+                iconScene.add(clonedRings);
+            }
+            const iconRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            iconRenderer.setSize(Config.UI.BUTTON_ICON_SIZE, Config.UI.BUTTON_ICON_SIZE);
+            iconRenderer.setClearColor(0x000000, 0);
+            iconRenderer.render(iconScene, iconCamera);
+            buttonElement.style.backgroundImage = `url(${iconRenderer.domElement.toDataURL()})`;
+            iconRenderer.domElement.remove();
+            iconRenderer.forceContextLoss();
+            iconScene.traverse(object => {
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(mat => mat.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
+            iconScene.clear();
+        }
 
-            currentCameraTarget = newTarget;
-            isAnimatingCamera = true;
-            updateFocusReleaseButtonVisibility(); // Update button visibility on focus change
-
-            // Determine target radius based on the object
-            if (newTarget === star) {
-                targetOrbitRadius = 70; // Default view distance for the entire solar system
-            } else {
-                // Find the planet object in the 'planets' array to get its orbitRadius
-                const focusedPlanetData = planets.find(p => p.mesh === newTarget);
-                if (focusedPlanetData) {
-                    // Set targetOrbitRadius to be a multiple of the planet's radius for a closer look
-                    targetOrbitRadius = focusedPlanetData.mesh.geometry.parameters.radius * 8; // Closer zoom for individual planets
-                    // Ensure it's not too close or too far
-                    targetOrbitRadius = Math.max(minOrbitRadius, Math.min(maxOrbitRadius, targetOrbitRadius));
+        async function setupCelestialBodies() {
+            createSun();
+            for (const pConfig of Config.PLANETS) {
+                const planetData = createPlanet(pConfig);
+                if (pConfig.lightsTexture) {
+                    addEarthLights(planetData.mesh, pConfig.radius, pConfig.lightsTexture);
+                }
+                if (pConfig.moons) {
+                    pConfig.moons.forEach(moonConfig => createMoon(planetData.mesh, moonConfig));
+                }
+                if (pConfig.rings) {
+                    createRing(planetData.mesh, pConfig.rings);
+                }
+                if (pConfig.fieldLines) {
+                    createMagneticFieldLines(planetData.mesh, pConfig.radius, pConfig.fieldLines.numLines, pConfig.fieldLines.extent, pConfig.fieldLines.color);
                 }
             }
+            createMagneticFieldLines(star, Config.STAR.RADIUS, Config.STAR.FIELD_LINES.NUM_LINES, Config.STAR.FIELD_LINES.EXTENT_EQUATORIAL, Config.STAR.FIELD_LINES.COLOR);
+            createAsteroidBelt();
+            createStars();
+            createOrganicNebula();
+            createSpaceship();
+            createStaticGravityGrid();
+            createFallingGravityParticles();
+            const planetButtonIds = Array.from({ length: Config.PLANETS.length }, (_, i) => `planetButton${i}`);
+            await Promise.all(planets.map(planetData => new Promise(resolve => {
+                if (planetData.mesh.children[0].material.map && !planetData.mesh.children[0].material.map.image) {
+                    planetData.mesh.children[0].material.map.onUpdate = () => resolve();
+                } else {
+                    resolve();
+                }
+            })));
+            planets.forEach((planetData, index) => {
+                const button = document.getElementById(planetButtonIds[index]);
+                if (button) {
+                    button.style.setProperty('--button-index', index + Config.UI.PLANET_BUTTON_START_INDEX);
+                    button.title = `Focus on ${planetData.name}`;
+                    createPlanetButtonIcon(planetData, button);
+                    button.addEventListener('click', () => focusCameraOn(planetData.mesh));
+                }
+            });
+            const systemButton = document.getElementById('planetButtonSystem');
+            if (systemButton) {
+                systemButton.style.setProperty('--button-index', Config.PLANETS.length + Config.UI.PLANET_BUTTON_START_INDEX);
+                systemButton.title = "Focus on Sun";
+                const sunIconScene = new THREE.Scene();
+                const sunIconCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+                sunIconCamera.position.z = 10;
+                const sunIconMesh = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xFFFF00 }));
+                sunIconScene.add(sunIconMesh);
+                const sunIconRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                sunIconRenderer.setSize(Config.UI.BUTTON_ICON_SIZE, Config.UI.BUTTON_ICON_SIZE);
+                sunIconRenderer.setClearColor(0x000000, 0);
+                sunIconRenderer.render(sunIconScene, sunIconCamera);
+                systemButton.style.backgroundImage = `url(${sunIconRenderer.domElement.toDataURL()})`;
+                systemButton.addEventListener('click', () => focusCameraOn(star));
+                sunIconRenderer.domElement.remove();
+                sunIconRenderer.forceContextLoss();
+                sunIconScene.traverse(object => {
+                    if (object.geometry) object.geometry.dispose();
+                    if (object.material) object.material.dispose();
+                });
+                sunIconScene.clear();
+            }
+        }
 
-            // Calculate the camera's current position relative to the new target
-            // Get the world position of the new target
+        function setupEventListeners() {
+            document.addEventListener('mousedown', onDocumentMouseDown, false);
+            document.addEventListener('mouseup', onDocumentMouseUp, false);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('wheel', onDocumentMouseWheel, false);
+            document.addEventListener('click', onDocumentClick, false);
+            document.addEventListener('keydown', onDocumentKeyDown, false);
+            document.addEventListener('keyup', onDocumentKeyUp, false);
+            document.addEventListener('touchstart', onTouchStart, false);
+            document.addEventListener('touchmove', onTouchMove, false);
+            document.addEventListener('touchend', onTouchEnd, false);
+            focusReleaseButton.addEventListener('click', onFocusReleaseButtonClick, false);
+            toggleFieldLinesButton.addEventListener('click', toggleMagneticFieldLines, false);
+            toggleSpaceshipButton.addEventListener('click', toggleSpaceshipMode, false);
+            toggleGravityFieldButton.addEventListener('click', toggleGravityField, false);
+            togglePauseButton.addEventListener('click', togglePause, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function focusCameraOn(newTarget) {
+            if (cameraMode === 'spaceship') {
+                toggleSpaceshipMode();
+                setTimeout(() => {
+                    if (newTarget !== star) {
+                        focusCameraOn(newTarget);
+                    }
+                }, 500);
+                return;
+            }
+            currentCameraTarget = newTarget;
+            isAnimatingCamera = true;
+            updateFocusReleaseButtonVisibility();
+            updateInfoPanel();
+            if (newTarget === star) {
+                targetOrbitRadius = Config.CAMERA.ORBIT_RADIUS_DEFAULT;
+            } else {
+                const focusedPlanetData = planets.find(p => p.mesh === newTarget);
+                if (focusedPlanetData) {
+                    targetOrbitRadius = focusedPlanetData.mesh.children[0].geometry.parameters.radius * Config.CAMERA.PLANET_ZOOM_MULTIPLIER;
+                    targetOrbitRadius = Math.max(Config.CAMERA.ORBIT_RADIUS_MIN, Math.min(Config.CAMERA.ORBIT_RADIUS_MAX, targetOrbitRadius));
+                }
+            }
             const targetWorldPosition = newTarget.getWorldPosition(tempVector);
             const relativeCameraPos = camera.position.clone().sub(targetWorldPosition);
-
-            // Convert this relative Cartesian position to spherical coordinates
             const sphericalCoords = cartesianToSpherical(relativeCameraPos.x, relativeCameraPos.y, relativeCameraPos.z);
-
             targetOrbitTheta = sphericalCoords.theta;
             targetOrbitPhi = sphericalCoords.phi;
-
-            // Ensure theta and phi are within a reasonable range to avoid excessive spinning
-            // Adjust current theta/phi to be closer to target for smoother interpolation
             orbitTheta = THREE.MathUtils.euclideanModulo(orbitTheta, Math.PI * 2);
             targetOrbitTheta = THREE.MathUtils.euclideanModulo(targetOrbitTheta, Math.PI * 2);
-
             if (Math.abs(targetOrbitTheta - orbitTheta) > Math.PI) {
                 if (targetOrbitTheta > orbitTheta) {
                     orbitTheta += Math.PI * 2;
@@ -1287,136 +1237,99 @@
             }
         }
 
-        /**
-         * Updates the camera's position based on the current camera mode.
-         */
         function updateCameraPosition() {
             if (cameraMode === 'orbit') {
-                // Smoothly interpolate current orbit parameters towards target parameters
                 if (isAnimatingCamera) {
-                    orbitRadius = THREE.MathUtils.lerp(orbitRadius, targetOrbitRadius, 0.05);
-                    orbitTheta = THREE.MathUtils.lerp(orbitTheta, targetOrbitTheta, 0.05);
-                    orbitPhi = THREE.MathUtils.lerp(orbitPhi, targetOrbitPhi, 0.05);
-
-                    // Stop animation if values are very close to targets
-                    if (Math.abs(orbitRadius - targetOrbitRadius) < 0.1 &&
-                        Math.abs(orbitTheta - targetOrbitTheta) < 0.001 &&
-                        Math.abs(orbitPhi - targetOrbitPhi) < 0.001) {
+                    orbitRadius = THREE.MathUtils.lerp(orbitRadius, targetOrbitRadius, Config.CAMERA.ANIMATION_LERP_FACTOR);
+                    orbitTheta = THREE.MathUtils.lerp(orbitTheta, targetOrbitTheta, Config.CAMERA.ANIMATION_LERP_FACTOR);
+                    orbitPhi = THREE.MathUtils.lerp(orbitPhi, targetOrbitPhi, Config.CAMERA.ANIMATION_LERP_FACTOR);
+                    if (Math.abs(orbitRadius - targetOrbitRadius) < Config.CAMERA.ANIMATION_THRESHOLD_RADIUS &&
+                        Math.abs(orbitTheta - targetOrbitTheta) < Config.CAMERA.ANIMATION_THRESHOLD_ANGLE &&
+                        Math.abs(orbitPhi - targetOrbitPhi) < Config.CAMERA.ANIMATION_THRESHOLD_ANGLE) {
                         isAnimatingCamera = false;
                     }
                 }
-
-                // Clamp orbitPhi to prevent camera flipping over the poles during manual interaction
                 orbitPhi = Math.max(0.01, Math.min(Math.PI - 0.01, orbitPhi));
-
-                // Get the world position of the current target
                 const targetWorldPosition = currentCameraTarget.getWorldPosition(tempVector);
-
-                // Calculate camera position using spherical coordinates relative to the current target's world position
                 camera.position.x = targetWorldPosition.x + orbitRadius * Math.sin(orbitPhi) * Math.sin(orbitTheta);
                 camera.position.y = targetWorldPosition.y + orbitRadius * Math.cos(orbitPhi);
                 camera.position.z = targetWorldPosition.z + orbitRadius * Math.sin(orbitPhi) * Math.cos(orbitTheta);
-
-                // Make the camera look at the current target's world position
                 camera.lookAt(targetWorldPosition);
-
             } else if (cameraMode === 'spaceship') {
-                // Update spaceship rotation based on mouse look
                 spaceship.rotation.y -= mouseLookX;
                 spaceship.rotation.x -= mouseLookY;
-                // Reset mouse look for continuous input
                 mouseLookX = 0;
                 mouseLookY = 0;
-
-                // Apply movement based on keyboard state
                 const forwardVector = new THREE.Vector3(0, 0, 1).applyQuaternion(spaceship.quaternion);
                 const rightVector = new THREE.Vector3(1, 0, 0).applyQuaternion(spaceship.quaternion);
-
-                if (keyboardState.w) spaceship.position.add(forwardVector.multiplyScalar(spaceshipSpeed));
-                if (keyboardState.s) spaceship.position.sub(forwardVector.multiplyScalar(spaceshipSpeed));
-                if (keyboardState.a) spaceship.position.sub(rightVector.multiplyScalar(spaceshipSpeed));
-                if (keyboardState.d) spaceship.position.add(rightVector.multiplyScalar(spaceshipSpeed));
-
-                // Update camera position relative to spaceship
-                const cameraWorldPosition = spaceshipCameraOffset.clone().applyQuaternion(spaceship.quaternion).add(spaceship.position);
+                let isMoving = false;
+                if (keyboardState.w) {
+                    spaceship.position.add(forwardVector.multiplyScalar(Config.SPACESHIP.SPEED));
+                    isMoving = true;
+                }
+                if (keyboardState.s) {
+                    spaceship.position.sub(forwardVector.multiplyScalar(Config.SPACESHIP.SPEED));
+                    isMoving = true;
+                }
+                if (keyboardState.a) {
+                    spaceship.position.sub(rightVector.multiplyScalar(Config.SPACESHIP.SPEED));
+                    isMoving = true;
+                }
+                if (keyboardState.d) {
+                    spaceship.position.add(rightVector.multiplyScalar(Config.SPACESHIP.SPEED));
+                    isMoving = true;
+                }
+                spaceship.thrusterGlows.forEach(glow => {
+                    glow.material.opacity = isMoving ? 0.5 : 0;
+                });
+                const cameraWorldPosition = Config.SPACESHIP.CAMERA_OFFSET.clone().applyQuaternion(spaceship.quaternion).add(spaceship.position);
                 camera.position.copy(cameraWorldPosition);
                 camera.lookAt(spaceship.position);
             }
         }
 
-        /**
-         * Animation loop for updating the scene.
-         */
         function animate() {
-            requestAnimationFrame(animate); // Request the next frame
-
-            // Update planet positions and rotations before updating camera,
-            // so camera targets the most up-to-date position
-            planets.forEach(planet => {
-                // Orbit around the star
-                planet.orbitPivot.rotation.y += planet.orbitSpeed;
-                // Rotate the planet on its own axis
-                planet.mesh.rotation.y += planet.rotationSpeed;
-            });
-
-            // Update moon positions and rotations
-            moons.forEach(moon => {
-                moon.orbitPivot.rotation.y += moon.orbitSpeed;
-                moon.mesh.rotation.y += moon.rotationSpeed;
-            });
-
-            // Update asteroid positions and rotations
-            asteroids.forEach(asteroid => {
-                asteroid.angle += asteroid.orbitSpeed;
-                asteroid.mesh.position.x = asteroid.orbitRadius * Math.cos(asteroid.angle);
-                asteroid.mesh.position.z = asteroid.orbitRadius * Math.sin(asteroid.angle);
-                asteroid.mesh.rotation.y += asteroid.rotationSpeed;
-                asteroid.mesh.rotation.x += asteroid.rotationSpeed * 0.5; // Add some tilt
-            });
-
-            // Rotate the nebula for a dynamic effect
-            if (nebulaGroup) {
-                nebulaGroup.rotation.y += 0.0005;
-                nebulaGroup.rotation.x += 0.0002;
+            requestAnimationFrame(animate);
+            if (!isPaused) {
+                planets.forEach(planet => {
+                    planet.orbitPivot.rotation.y += planet.orbitSpeed;
+                    planet.mesh.rotation.y += planet.rotationSpeed;
+                });
+                moons.forEach(moon => {
+                    moon.orbitPivot.rotation.y += moon.orbitSpeed;
+                    moon.mesh.rotation.y += moon.rotationSpeed;
+                });
+                if (asteroids.instancedMesh) {
+                    const matrix = new THREE.Matrix4();
+                    asteroids.forEach(asteroid => {
+                        asteroid.angle += asteroid.orbitSpeed;
+                        matrix.setPosition(
+                            asteroid.orbitRadius * Math.cos(asteroid.angle),
+                            asteroid.mesh ? asteroid.mesh.position.y : (Math.random() - 0.5) * 2,
+                            asteroid.orbitRadius * Math.sin(asteroid.angle)
+                        );
+                        asteroids.instancedMesh.setMatrixAt(asteroid.index, matrix);
+                    });
+                    asteroids.instancedMesh.instanceMatrix.needsUpdate = true;
+                }
+                if (nebulaGroup) {
+                    nebulaGroup.rotation.y += Config.NEBULA.ROTATION_SPEED_Y;
+                    nebulaGroup.rotation.x += Config.NEBULA.ROTATION_SPEED_X;
+                }
+                star.rotation.y += Config.STAR.ROTATION_SPEED;
             }
-
-
-            // Update camera position based on orbit controls and any ongoing transitions
             updateCameraPosition();
-
-            // Rotate the star on its own axis (can be done after camera update as it's the scene origin)
-            star.rotation.y += 0.001;
-
-
-            renderer.render(scene, camera); // Render the scene
+            updateGravitySimulation();
+            renderer.render(scene, camera);
         }
 
-        // Start the animation on window load.
         window.onload = function () {
-            init(); // Initialize the 3D scene
-            animate(); // Start the animation loop
-        }
-
-        // Event listeners for user interactions
-        document.addEventListener('keydown', onDocumentKeyDown);
-        document.addEventListener('keyup', onDocumentKeyUp);
-        document.addEventListener('mousedown', onDocumentMouseDown);
-        document.addEventListener('mouseup', onDocumentMouseUp);
-        document.addEventListener('mousemove', onDocumentMouseMove);
-        document.addEventListener('wheel', onDocumentMouseWheel);
-        focusReleaseButton.addEventListener('click', onFocusReleaseButtonClick);
-        document.addEventListener('click', onDocumentClick);
-
-        // Resize handler to adjust renderer and camera aspect ratio
-        window.addEventListener('resize', () => {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            renderer.setSize(width, height);
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-        });
-
-    
+            setupScene();
+            setupCelestialBodies();
+            setupEventListeners();
+            updateCameraPosition();
+            animate();
+        };
     </script>
 </body>
 </html>
